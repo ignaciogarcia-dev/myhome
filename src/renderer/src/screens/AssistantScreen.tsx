@@ -326,6 +326,87 @@ export default function AssistantScreen(): React.JSX.Element {
     }
   }, [isListening, isRecording])
 
+  // Subscribe to TTS events
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) {
+      console.warn('SpeechSynthesis not available')
+      return
+    }
+
+    const handleSpeak = (payload: {
+      text: string
+      voice?: string
+      rate?: number
+      pitch?: number
+      volume?: number
+    }): void => {
+      // Cancel current speech first
+      window.speechSynthesis.cancel()
+      currentUtteranceRef.current = null
+
+      // Create new utterance
+      const utterance = new SpeechSynthesisUtterance(payload.text)
+
+      // Apply optional properties
+      if (payload.rate !== undefined) {
+        utterance.rate = payload.rate
+      }
+      if (payload.pitch !== undefined) {
+        utterance.pitch = payload.pitch
+      }
+      if (payload.volume !== undefined) {
+        utterance.volume = payload.volume
+      }
+
+      // Voice selection with delayed loading support
+      const setVoice = (): void => {
+        if (payload.voice) {
+          const voices = window.speechSynthesis.getVoices()
+          const selectedVoice = voices.find((v) => v.name === payload.voice)
+          if (selectedVoice) {
+            utterance.voice = selectedVoice
+          }
+        }
+      }
+
+      // Try to set voice immediately
+      setVoice()
+
+      // If voices not loaded yet, wait for voiceschanged event (one-time)
+      if (window.speechSynthesis.getVoices().length === 0) {
+        const onVoicesChanged = (): void => {
+          setVoice()
+          window.speechSynthesis.speak(utterance)
+          currentUtteranceRef.current = utterance
+          window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged)
+        }
+        window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged)
+      } else {
+        // Speak immediately
+        window.speechSynthesis.speak(utterance)
+        currentUtteranceRef.current = utterance
+      }
+    }
+
+    const handleStop = (): void => {
+      window.speechSynthesis.cancel()
+      currentUtteranceRef.current = null
+    }
+
+    // Subscribe to TTS events
+    const unsubscribeSpeak = window.api.tts.on(CHANNELS.events.TTS_SPEAK, handleSpeak)
+    const unsubscribeStop = window.api.tts.on(CHANNELS.events.TTS_STOP, handleStop)
+
+    // Cleanup on unmount
+    return () => {
+      unsubscribeSpeak()
+      unsubscribeStop()
+      // Cancel speech
+      window.speechSynthesis.cancel()
+      currentUtteranceRef.current = null
+    }
+  }, [])
+
   // Ensure stopListening is called on unmount
   useEffect(() => {
     return () => {
