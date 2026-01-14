@@ -481,7 +481,8 @@ export default function AssistantScreen(): React.JSX.Element {
    * Stop recording and generate transcript via STT IPC
    */
   const stopRecordingAndGenerateTranscript = async (): Promise<string> => {
-    if (!isRecording || !mediaRecorderRef.current) {
+    const recorder = mediaRecorderRef.current
+    if (!recorder) {
       return generateFallbackTranscript(0)
     }
 
@@ -491,87 +492,95 @@ export default function AssistantScreen(): React.JSX.Element {
       recordingDurationIntervalRef.current = null
     }
 
-    // Stop recorder and wait for final data
-    return new Promise<string>((resolve) => {
-      const recorder = mediaRecorderRef.current
-      if (!recorder) {
-        resolve(generateFallbackTranscript(0))
-        return
+    // Wait for recorder to fully stop (and flush its final data)
+    const stopped = new Promise<void>((resolve) => {
+      const onStop = (): void => {
+        recorder.removeEventListener('stop', onStop)
+        resolve()
       }
-
-      recorder.onstop = async () => {
-        try {
-          // Guard empty chunks
-          if (recordedChunksRef.current.length === 0) {
-            const durationMs = recordingStartTimeRef.current
-              ? Math.max(0, Math.round(Date.now() - recordingStartTimeRef.current))
-              : Math.round(recordingDuration * 1000)
-            resolve(generateFallbackTranscript(durationMs))
-            return
-          }
-
-          // Determine mimeType safely
-          const mimeType = recordingMimeTypeRef.current || 'audio/webm'
-
-          // Assemble Blob from chunks
-          const blob = new Blob(recordedChunksRef.current, { type: mimeType })
-
-          // Convert Blob to base64 using FileReader
-          const base64 = await new Promise<string>((resolveBase64, rejectBase64) => {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-              const result = typeof reader.result === 'string' ? reader.result : ''
-              const b64 = result.includes(',') ? result.split(',')[1] : result
-              resolveBase64(b64 || '')
-            }
-            reader.onerror = () => rejectBase64(reader.error || new Error('FileReader error'))
-            reader.readAsDataURL(blob)
-          })
-
-          // Calculate durationMs (prefer timestamp delta)
-          const durationMs = recordingStartTimeRef.current
-            ? Math.max(0, Math.round(Date.now() - recordingStartTimeRef.current))
-            : Math.round(recordingDuration * 1000)
-
-          // Guard empty base64
-          if (!base64) {
-            resolve(generateFallbackTranscript(durationMs))
-            return
-          }
-
-          // Call STT IPC
-          const res = await window.api.stt.transcribe({
-            audioBase64: base64,
-            mimeType,
-            durationMs
-          })
-
-          // Clear chunks
-          recordedChunksRef.current = []
-          recordingStartTimeRef.current = null
-          setIsRecording(false)
-          setRecordingDuration(0)
-
-          resolve(res.text)
-        } catch (err) {
-          // Fallback to local mock transcript on any error
-          console.error('STT transcription error:', err)
-          const durationMs = recordingStartTimeRef.current
-            ? Math.max(0, Math.round(Date.now() - recordingStartTimeRef.current))
-            : Math.round(recordingDuration * 1000)
-
-          // Clear chunks
-          recordedChunksRef.current = []
-          recordingStartTimeRef.current = null
-          setIsRecording(false)
-          setRecordingDuration(0)
-
-          resolve(generateFallbackTranscript(durationMs))
-        }
-      }
-
-      recorder.stop()
+      recorder.addEventListener('stop', onStop)
     })
+
+    // Stop the recorder if it's still active
+    if (recorder.state !== 'inactive') {
+      recorder.stop()
+    }
+
+    // Wait for stop event to fire
+    await stopped
+
+    // Debug logs (temporarily)
+    console.log('chunks', recordedChunksRef.current.length)
+    console.log('mime', recordingMimeTypeRef.current)
+    const durationMs = recordingStartTimeRef.current
+      ? Math.max(0, Math.round(Date.now() - recordingStartTimeRef.current))
+      : Math.round(recordingDuration * 1000)
+    console.log('durationMs', durationMs)
+
+    // IMPORTANT: only check chunks after recorder has fully stopped
+    if (recordedChunksRef.current.length === 0) {
+      // Clear state
+      setIsRecording(false)
+      setRecordingDuration(0)
+      return generateFallbackTranscript(durationMs)
+    }
+
+    // Determine mimeType safely
+    const mimeType = recordingMimeTypeRef.current || 'audio/webm'
+
+    // Assemble Blob from chunks
+    const blob = new Blob(recordedChunksRef.current, { type: mimeType })
+
+    // Convert Blob to base64 using FileReader
+    const base64 = await new Promise<string>((resolveBase64, rejectBase64) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const result = typeof reader.result === 'string' ? reader.result : ''
+        const b64 = result.includes(',') ? result.split(',')[1] : result
+        resolveBase64(b64 || '')
+      }
+      reader.onerror = () => rejectBase64(reader.error || new Error('FileReader error'))
+      reader.readAsDataURL(blob)
+    })
+
+    // Debug log
+    console.log('base64 length', base64.length)
+
+    // Guard empty base64
+    if (!base64) {
+      // Clear state
+      recordedChunksRef.current = []
+      recordingStartTimeRef.current = null
+      setIsRecording(false)
+      setRecordingDuration(0)
+      return generateFallbackTranscript(durationMs)
+    }
+
+    try {
+      // Call STT IPC
+      const res = await window.api.stt.transcribe({
+        audioBase64: base64,
+        mimeType,
+        durationMs
+      })
+
+      // Clear chunks AFTER success/fallback decision
+      recordedChunksRef.current = []
+      recordingStartTimeRef.current = null
+      setIsRecording(false)
+      setRecordingDuration(0)
+
+      return res.text || generateFallbackTranscript(durationMs)
+    } catch (err) {
+      // Fallback to local mock transcript on any error
+      console.error('STT transcription error:', err)
+      // Clear state
+      recordedChunksRef.current = []
+      recordingStartTimeRef.current = null
+      setIsRecording(false)
+      setRecordingDuration(0)
+      return generateFallbackTranscript(durationMs)
+    }
   }
 
   /**
