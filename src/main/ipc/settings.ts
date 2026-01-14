@@ -1,6 +1,6 @@
 /**
  * Settings IPC Handlers
- * 
+ *
  * Handles settings retrieval and updates with in-memory mock storage.
  * In production, this would persist to disk (e.g., using electron-store).
  */
