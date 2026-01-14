@@ -111,6 +111,18 @@ export default function AssistantScreen(): React.JSX.Element {
     }
   }
 
+  const handleToggleListening = async (): Promise<void> => {
+    try {
+      if (isListening) {
+        await window.api.audio.stopListening()
+      } else {
+        await window.api.audio.startListening()
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle listening')
+    }
+  }
+
   return (
     <div style={{ padding: '20px' }}>
       <h2>Assistant</h2>
