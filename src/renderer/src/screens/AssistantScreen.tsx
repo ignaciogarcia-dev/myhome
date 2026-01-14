@@ -297,16 +297,145 @@ export default function AssistantScreen(): React.JSX.Element {
     }
   }
 
-  const handleToggleListening = async (): Promise<void> => {
+  /**
+   * Start recording audio
+   */
+  const startRecording = (): void => {
+    if (!mediaStreamRef.current || isRecording) {
+      return
+    }
+
+    try {
+      // Reset chunks
+      recordedChunksRef.current = []
+
+      // Determine best mime type
+      let mimeType = 'audio/webm;codecs=opus'
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm'
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = '' // Use default
+        }
+      }
+
+      // Create MediaRecorder
+      const recorder = new MediaRecorder(mediaStreamRef.current, mimeType ? { mimeType } : undefined)
+      mediaRecorderRef.current = recorder
+
+      // Handle data available
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data)
+        }
+      }
+
+      // Start recording
+      recorder.start()
+      setIsRecording(true)
+      recordingStartTimeRef.current = Date.now()
+      setRecordingDuration(0)
+
+      // Start duration interval
+      recordingDurationIntervalRef.current = window.setInterval(() => {
+        if (recordingStartTimeRef.current) {
+          const duration = (Date.now() - recordingStartTimeRef.current) / 1000
+          setRecordingDuration(duration)
+        }
+      }, 100)
+    } catch (err) {
+      setMicError(err instanceof Error ? err.message : 'Failed to start recording')
+    }
+  }
+
+  /**
+   * Stop recording and generate mock transcript
+   */
+  const stopRecordingAndGenerateTranscript = async (): Promise<string> => {
+    if (!isRecording || !mediaRecorderRef.current) {
+      return 'User said something'
+    }
+
+    // Stop duration interval
+    if (recordingDurationIntervalRef.current !== null) {
+      clearInterval(recordingDurationIntervalRef.current)
+      recordingDurationIntervalRef.current = null
+    }
+
+    // Stop recorder and wait for final data
+    return new Promise<string>((resolve) => {
+      const recorder = mediaRecorderRef.current
+      if (!recorder) {
+        resolve('User said something')
+        return
+      }
+
+      recorder.onstop = () => {
+        const duration = recordingDuration
+        let transcript = 'User said something'
+
+        // Generate mock transcript based on duration
+        if (duration < 1) {
+          transcript = 'Tell me a joke'
+        } else if (duration >= 1 && duration < 3) {
+          transcript = 'Hello, how can I help you?'
+        } else if (duration >= 3 && duration < 5) {
+          transcript = "What's the weather like today?"
+        } else {
+          transcript = `User said something (${duration.toFixed(1)}s)`
+        }
+
+        // Clear chunks
+        recordedChunksRef.current = []
+        recordingStartTimeRef.current = null
+        setIsRecording(false)
+        setRecordingDuration(0)
+
+        resolve(transcript)
+      }
+
+      recorder.stop()
+    })
+  }
+
+  /**
+   * Tap button handler - tap-to-interact model
+   */
+  const handleTapButton = async (): Promise<void> => {
     try {
       if (isListening) {
+        // Stop listening → stop recording → generate transcript → send
         await window.api.audio.stopListening()
-      } else {
-        await window.api.audio.startListening()
+        const transcript = await stopRecordingAndGenerateTranscript()
+        setLastTranscript(transcript)
+        await window.api.assistant.sendMessage(transcript)
+        return
       }
+
+      if (status === 'thinking' || status === 'responding') {
+        // Interrupt assistant
+        await window.api.assistant.cancel()
+        setTokens([]) // Clear tokens
+        return
+      }
+
+      // Idle → start listening (recording will start when stream is available)
+      await window.api.audio.startListening()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to toggle listening')
+      setError(err instanceof Error ? err.message : 'Failed to handle tap')
     }
+  }
+
+  /**
+   * Get button label based on current state
+   */
+  const getButtonLabel = (): string => {
+    if (isListening) {
+      return `Listening… (tap to stop) ${recordingDuration > 0 ? `(${recordingDuration.toFixed(1)}s)` : ''}`
+    }
+    if (status === 'thinking' || status === 'responding') {
+      return 'Tap to interrupt'
+    }
+    return 'Tap to speak'
   }
 
   return (
