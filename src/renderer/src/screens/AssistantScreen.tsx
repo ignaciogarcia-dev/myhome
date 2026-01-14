@@ -372,55 +372,6 @@ export default function AssistantScreen(): React.JSX.Element {
     }
   }
 
-  /**
-   * Start recording audio
-   */
-  const startRecording = (): void => {
-    if (!mediaStreamRef.current || isRecording) {
-      return
-    }
-
-    try {
-      // Reset chunks
-      recordedChunksRef.current = []
-
-      // Determine best mime type
-      let mimeType = 'audio/webm;codecs=opus'
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/webm'
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = '' // Use default
-        }
-      }
-
-      // Create MediaRecorder
-      const recorder = new MediaRecorder(mediaStreamRef.current, mimeType ? { mimeType } : undefined)
-      mediaRecorderRef.current = recorder
-
-      // Handle data available
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data)
-        }
-      }
-
-      // Start recording
-      recorder.start()
-      setIsRecording(true)
-      recordingStartTimeRef.current = Date.now()
-      setRecordingDuration(0)
-
-      // Start duration interval
-      recordingDurationIntervalRef.current = window.setInterval(() => {
-        if (recordingStartTimeRef.current) {
-          const duration = (Date.now() - recordingStartTimeRef.current) / 1000
-          setRecordingDuration(duration)
-        }
-      }, 100)
-    } catch (err) {
-      setMicError(err instanceof Error ? err.message : 'Failed to start recording')
-    }
-  }
 
   /**
    * Stop recording and generate mock transcript
