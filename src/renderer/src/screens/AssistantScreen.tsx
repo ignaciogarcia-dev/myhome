@@ -261,13 +261,61 @@ export default function AssistantScreen(): React.JSX.Element {
   // Start recording when stream becomes available and listening is active
   useEffect(() => {
     if (isListening && mediaStreamRef.current && !isRecording) {
-      startRecording()
+      // Reset chunks
+      recordedChunksRef.current = []
+
+      // Determine best mime type
+      let mimeType = 'audio/webm;codecs=opus'
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm'
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = '' // Use default
+        }
+      }
+
+      try {
+        // Create MediaRecorder
+        const recorder = new MediaRecorder(
+          mediaStreamRef.current,
+          mimeType ? { mimeType } : undefined
+        )
+        mediaRecorderRef.current = recorder
+
+        // Handle data available
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            recordedChunksRef.current.push(event.data)
+          }
+        }
+
+        // Start recording
+        recorder.start()
+        setIsRecording(true)
+        recordingStartTimeRef.current = Date.now()
+        setRecordingDuration(0)
+
+        // Start duration interval
+        recordingDurationIntervalRef.current = window.setInterval(() => {
+          if (recordingStartTimeRef.current) {
+            const duration = (Date.now() - recordingStartTimeRef.current) / 1000
+            setRecordingDuration(duration)
+          }
+        }, 100)
+      } catch (err) {
+        setMicError(err instanceof Error ? err.message : 'Failed to start recording')
+      }
     }
     // Defensive: stop recording if listening stops unexpectedly
-    if (!isListening && isRecording) {
-      stopRecordingAndGenerateTranscript().catch(() => {
-        // Ignore errors during defensive cleanup
-      })
+    if (!isListening && isRecording && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop()
+      if (recordingDurationIntervalRef.current !== null) {
+        clearInterval(recordingDurationIntervalRef.current)
+        recordingDurationIntervalRef.current = null
+      }
+      recordedChunksRef.current = []
+      recordingStartTimeRef.current = null
+      setIsRecording(false)
+      setRecordingDuration(0)
     }
   }, [isListening, isRecording])
 
