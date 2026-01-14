@@ -377,11 +377,27 @@ export default function AssistantScreen(): React.JSX.Element {
   }
 
   /**
-   * Stop recording and generate mock transcript
+   * Generate fallback transcript based on duration (local mock)
+   */
+  const generateFallbackTranscript = (durationMs: number): string => {
+    if (durationMs < 1000) {
+      return 'Tell me a joke'
+    }
+    if (durationMs >= 1000 && durationMs < 3000) {
+      return 'Hello, how can I help you?'
+    }
+    if (durationMs >= 3000 && durationMs < 5000) {
+      return "What's the weather like today?"
+    }
+    return `User said something (${(durationMs / 1000).toFixed(1)}s)`
+  }
+
+  /**
+   * Stop recording and generate transcript via STT IPC
    */
   const stopRecordingAndGenerateTranscript = async (): Promise<string> => {
     if (!isRecording || !mediaRecorderRef.current) {
-      return 'User said something'
+      return generateFallbackTranscript(0)
     }
 
     // Stop duration interval
@@ -394,32 +410,79 @@ export default function AssistantScreen(): React.JSX.Element {
     return new Promise<string>((resolve) => {
       const recorder = mediaRecorderRef.current
       if (!recorder) {
-        resolve('User said something')
+        resolve(generateFallbackTranscript(0))
         return
       }
 
-      recorder.onstop = () => {
-        const duration = recordingDuration
-        let transcript = 'User said something'
+      recorder.onstop = async () => {
+        try {
+          // Guard empty chunks
+          if (recordedChunksRef.current.length === 0) {
+            const durationMs = recordingStartTimeRef.current
+              ? Math.max(0, Math.round(Date.now() - recordingStartTimeRef.current))
+              : Math.round(recordingDuration * 1000)
+            resolve(generateFallbackTranscript(durationMs))
+            return
+          }
 
-        // Generate mock transcript based on duration
-        if (duration < 1) {
-          transcript = 'Tell me a joke'
-        } else if (duration >= 1 && duration < 3) {
-          transcript = 'Hello, how can I help you?'
-        } else if (duration >= 3 && duration < 5) {
-          transcript = "What's the weather like today?"
-        } else {
-          transcript = `User said something (${duration.toFixed(1)}s)`
+          // Determine mimeType safely
+          const mimeType = recordingMimeTypeRef.current || 'audio/webm'
+
+          // Assemble Blob from chunks
+          const blob = new Blob(recordedChunksRef.current, { type: mimeType })
+
+          // Convert Blob to base64 using FileReader
+          const base64 = await new Promise<string>((resolveBase64, rejectBase64) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              const result = typeof reader.result === 'string' ? reader.result : ''
+              const b64 = result.includes(',') ? result.split(',')[1] : result
+              resolveBase64(b64 || '')
+            }
+            reader.onerror = () => rejectBase64(reader.error || new Error('FileReader error'))
+            reader.readAsDataURL(blob)
+          })
+
+          // Calculate durationMs (prefer timestamp delta)
+          const durationMs = recordingStartTimeRef.current
+            ? Math.max(0, Math.round(Date.now() - recordingStartTimeRef.current))
+            : Math.round(recordingDuration * 1000)
+
+          // Guard empty base64
+          if (!base64) {
+            resolve(generateFallbackTranscript(durationMs))
+            return
+          }
+
+          // Call STT IPC
+          const res = await window.api.stt.transcribe({
+            audioBase64: base64,
+            mimeType,
+            durationMs
+          })
+
+          // Clear chunks
+          recordedChunksRef.current = []
+          recordingStartTimeRef.current = null
+          setIsRecording(false)
+          setRecordingDuration(0)
+
+          resolve(res.text)
+        } catch (err) {
+          // Fallback to local mock transcript on any error
+          console.error('STT transcription error:', err)
+          const durationMs = recordingStartTimeRef.current
+            ? Math.max(0, Math.round(Date.now() - recordingStartTimeRef.current))
+            : Math.round(recordingDuration * 1000)
+
+          // Clear chunks
+          recordedChunksRef.current = []
+          recordingStartTimeRef.current = null
+          setIsRecording(false)
+          setRecordingDuration(0)
+
+          resolve(generateFallbackTranscript(durationMs))
         }
-
-        // Clear chunks
-        recordedChunksRef.current = []
-        recordingStartTimeRef.current = null
-        setIsRecording(false)
-        setRecordingDuration(0)
-
-        resolve(transcript)
       }
 
       recorder.stop()
