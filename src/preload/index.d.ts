@@ -75,6 +75,15 @@ export interface WindowApi {
      */
     on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe
   }
+
+  stt: {
+    /**
+     * Transcribe audio to text
+     */
+    transcribe: (
+      payload: InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['req']
+    ) => Promise<InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['res']>
+  }
 }
 
 declare global {
