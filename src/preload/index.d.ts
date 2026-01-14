@@ -41,6 +41,11 @@ export interface WindowApi {
     ) => Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['res']>
 
     /**
+     * Cancel the current assistant operation
+     */
+    cancel: () => Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_CANCEL]['res']>
+
+    /**
      * Subscribe to assistant events
      * Returns an unsubscribe function for cleanup
      */
