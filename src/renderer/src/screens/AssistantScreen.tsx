@@ -130,7 +130,14 @@ export default function AssistantScreen(): React.JSX.Element {
       {error && <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>}
 
       {/* Voice Control UI */}
-      <div style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}>
+      <div
+        style={{
+          marginBottom: '20px',
+          padding: '10px',
+          border: '1px solid #ccc',
+          borderRadius: '4px'
+        }}
+      >
         <h3 style={{ marginTop: 0 }}>Voice Control</h3>
         <div style={{ marginBottom: '10px' }}>
           <button onClick={handleToggleListening} style={{ marginRight: '10px' }}>
