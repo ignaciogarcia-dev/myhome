@@ -8,6 +8,7 @@ import { registerAssistantHandlers } from './ipc/assistant'
 import { registerAudioHandlers } from './ipc/audio'
 import { registerSttHandlers } from './ipc/stt'
 import { registerTtsHandlers } from './ipc/tts'
+import { registerSecretsHandlers } from './ipc/secrets'
 
 /**
  * Register all IPC handlers
@@ -20,6 +21,7 @@ function registerIpcHandlers(): void {
   registerAudioHandlers()
   registerSttHandlers()
   registerTtsHandlers()
+  registerSecretsHandlers()
 }
 
 function createWindow(): void {
