@@ -127,6 +127,17 @@ const api = {
         ipcRenderer.removeListener(event, handler)
       }
     }
+  },
+
+  stt: {
+    /**
+     * Transcribe audio to text
+     */
+    transcribe: async (
+      payload: InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['req']
+    ): Promise<InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.STT_TRANSCRIBE, payload)
+    }
   }
 }
 
