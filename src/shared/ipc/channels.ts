@@ -12,6 +12,8 @@ export const CHANNELS = {
     ASSISTANT_SEND_MESSAGE: 'assistant:send-message',
     ASSISTANT_CANCEL: 'assistant:cancel',
     STT_TRANSCRIBE: 'stt:transcribe',
+    TTS_SPEAK: 'tts:speak',
+    TTS_STOP: 'tts:stop',
     AUDIO_START_LISTENING: 'audio:start-listening',
     AUDIO_STOP_LISTENING: 'audio:stop-listening'
   },
@@ -19,7 +21,9 @@ export const CHANNELS = {
     ASSISTANT_STATE: 'assistant:state',
     ASSISTANT_TOKEN: 'assistant:token',
     AUDIO_STATE: 'audio:state',
-    AUDIO_LEVEL: 'audio:level'
+    AUDIO_LEVEL: 'audio:level',
+    TTS_SPEAK: 'tts:speak',
+    TTS_STOP: 'tts:stop'
   }
 } as const
 
