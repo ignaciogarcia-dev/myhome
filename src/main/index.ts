@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { registerSystemHandlers } from './ipc/system'
 import { registerSettingsHandlers } from './ipc/settings'
 import { registerAssistantHandlers } from './ipc/assistant'
+import { registerAudioHandlers } from './ipc/audio'
 
 /**
  * Register all IPC handlers
@@ -14,6 +15,7 @@ function registerIpcHandlers(): void {
   registerSystemHandlers()
   registerSettingsHandlers()
   registerAssistantHandlers()
+  registerAudioHandlers()
 }
 
 function createWindow(): void {
