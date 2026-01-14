@@ -37,6 +37,18 @@ export interface InvokeMap {
     req: void
     res: { success: boolean }
   }
+  [CHANNELS.invoke.STT_TRANSCRIBE]: {
+    req: {
+      audioBase64: string
+      mimeType: string
+      durationMs: number
+    }
+    res: {
+      text: string
+      provider: 'mock'
+      confidence?: number
+    }
+  }
   [CHANNELS.invoke.AUDIO_START_LISTENING]: {
     req: void
     res: { success: boolean }
