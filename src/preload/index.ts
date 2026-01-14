@@ -140,6 +140,35 @@ const api = {
     }
   },
 
+  secrets: {
+    /**
+     * Set OpenAI API key
+     */
+    setOpenAIKey: async (
+      apiKey: string
+    ): Promise<InvokeMap[typeof CHANNELS.invoke.SECRETS_SET_OPENAI_KEY]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.SECRETS_SET_OPENAI_KEY, { apiKey })
+    },
+
+    /**
+     * Check if OpenAI API key exists
+     */
+    hasOpenAIKey: async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_HAS_OPENAI_KEY]['res']
+    > => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.SECRETS_HAS_OPENAI_KEY)
+    },
+
+    /**
+     * Clear OpenAI API key
+     */
+    clearOpenAIKey: async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY]['res']
+    > => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY)
+    }
+  },
+
   tts: {
     /**
      * Speak text using TTS
