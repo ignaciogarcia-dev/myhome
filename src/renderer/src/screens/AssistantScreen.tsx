@@ -485,13 +485,18 @@ export default function AssistantScreen(): React.JSX.Element {
       >
         <h3 style={{ marginTop: 0 }}>Voice Control</h3>
         <div style={{ marginBottom: '10px' }}>
-          <button onClick={handleToggleListening} style={{ marginRight: '10px' }}>
-            {isListening ? 'Stop Listening' : 'Start Listening'}
+          <button onClick={handleTapButton} style={{ marginRight: '10px', padding: '10px 20px' }}>
+            {getButtonLabel()}
           </button>
-          <span>
-            <strong>State:</strong> {isListening ? 'Listening' : 'Stopped'}
-          </span>
+          {isRecording && (
+            <span style={{ color: '#4caf50', fontWeight: 'bold' }}>Recording…</span>
+          )}
         </div>
+        {lastTranscript && (
+          <div style={{ marginBottom: '10px', fontStyle: 'italic', color: '#666' }}>
+            <strong>Last heard:</strong> {lastTranscript}
+          </div>
+        )}
         <div>
           <strong>Level:</strong>
           <div
