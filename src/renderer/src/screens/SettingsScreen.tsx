@@ -51,11 +51,7 @@ export default function SettingsScreen(): React.JSX.Element {
     <div style={{ padding: '20px' }}>
       <h2>Settings</h2>
 
-      {error && (
-        <div style={{ color: 'red', marginBottom: '10px' }}>
-          Error: {error}
-        </div>
-      )}
+      {error && <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>}
 
       <div style={{ marginBottom: '20px' }}>
         <label style={{ display: 'block', marginBottom: '5px' }}>
