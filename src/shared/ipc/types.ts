@@ -33,6 +33,10 @@ export interface InvokeMap {
     req: SendMessageRequest
     res: SendMessageResponse
   }
+  [CHANNELS.invoke.ASSISTANT_CANCEL]: {
+    req: void
+    res: { success: boolean }
+  }
   [CHANNELS.invoke.AUDIO_START_LISTENING]: {
     req: void
     res: { success: boolean }
