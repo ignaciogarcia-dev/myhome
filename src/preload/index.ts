@@ -1,12 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import {
-  CHANNELS,
-  type InvokeMap,
-  type EventMap,
-  type AssistantState,
-  type AssistantToken
-} from '../shared'
+import { CHANNELS, type InvokeMap, type EventMap } from '../shared'
 
 /**
  * Type-safe unsubscribe function returned from event listeners
