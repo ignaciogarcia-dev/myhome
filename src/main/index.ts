@@ -6,6 +6,7 @@ import { registerSystemHandlers } from './ipc/system'
 import { registerSettingsHandlers } from './ipc/settings'
 import { registerAssistantHandlers } from './ipc/assistant'
 import { registerAudioHandlers } from './ipc/audio'
+import { registerSttHandlers } from './ipc/stt'
 
 /**
  * Register all IPC handlers
@@ -16,6 +17,7 @@ function registerIpcHandlers(): void {
   registerSettingsHandlers()
   registerAssistantHandlers()
   registerAudioHandlers()
+  registerSttHandlers()
 }
 
 function createWindow(): void {
