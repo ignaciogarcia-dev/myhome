@@ -15,11 +15,14 @@ export default function AssistantScreen(): React.JSX.Element {
 
   // Subscribe to assistant events
   useEffect(() => {
+    let currentMessageId: string | null = null
+
     const unsubscribeState = window.api.assistant.on(
       CHANNELS.events.ASSISTANT_STATE,
       (state: AssistantState) => {
         setStatus(state.status)
-        setMessageId(state.messageId ?? null)
+        currentMessageId = state.messageId ?? null
+        setMessageId(currentMessageId)
         if (state.error) {
           setError(state.error.message)
         }
@@ -31,7 +34,7 @@ export default function AssistantScreen(): React.JSX.Element {
       (token: AssistantToken) => {
         setTokens((prev) => {
           // Only append tokens for the current message
-          if (token.messageId === messageId || !messageId) {
+          if (token.messageId === currentMessageId || !currentMessageId) {
             return [...prev, token.token]
           }
           return prev
@@ -44,7 +47,7 @@ export default function AssistantScreen(): React.JSX.Element {
       unsubscribeState()
       unsubscribeToken()
     }
-  }, [messageId]) // Re-subscribe if messageId changes
+  }, []) // Only subscribe once on mount
 
   const handleSend = async (): Promise<void> => {
     if (!message.trim()) return
