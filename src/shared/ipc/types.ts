@@ -45,9 +45,21 @@ export interface InvokeMap {
     }
     res: {
       text: string
-      provider: 'mock'
+      provider: 'mock' | 'openai'
       confidence?: number
     }
+  }
+  [CHANNELS.invoke.SECRETS_SET_OPENAI_KEY]: {
+    req: { apiKey: string }
+    res: { success: boolean }
+  }
+  [CHANNELS.invoke.SECRETS_HAS_OPENAI_KEY]: {
+    req: void
+    res: { hasKey: boolean }
+  }
+  [CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY]: {
+    req: void
+    res: { success: boolean }
   }
   [CHANNELS.invoke.TTS_SPEAK]: {
     req: {
