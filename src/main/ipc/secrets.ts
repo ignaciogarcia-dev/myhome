@@ -84,7 +84,17 @@ async function saveSecrets(secrets: Record<string, string>): Promise<void> {
 export async function getOpenAIKey(): Promise<string | null> {
   try {
     const secrets = await loadSecrets()
-    return secrets[ENCRYPTED_KEY_NAME] || null
+    const stored = secrets[ENCRYPTED_KEY_NAME]
+    if (stored && stored.trim().length > 0) {
+      return stored.trim()
+    }
+
+    const envKey = process.env.OPENAI_API_KEY
+    if (envKey && envKey.trim().length > 0) {
+      return envKey.trim()
+    }
+
+    return null
   } catch (err) {
     console.error('Failed to load OpenAI key:', err)
     return null
