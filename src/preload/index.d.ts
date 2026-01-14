@@ -52,6 +52,24 @@ export interface WindowApi {
      */
     off: (event: keyof EventMap, callback: (...args: unknown[]) => void) => void
   }
+
+  audio: {
+    /**
+     * Start listening to audio input
+     */
+    startListening: () => Promise<InvokeMap[typeof CHANNELS.invoke.AUDIO_START_LISTENING]['res']>
+
+    /**
+     * Stop listening to audio input
+     */
+    stopListening: () => Promise<InvokeMap[typeof CHANNELS.invoke.AUDIO_STOP_LISTENING]['res']>
+
+    /**
+     * Subscribe to audio events
+     * Returns an unsubscribe function for cleanup
+     */
+    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe
+  }
 }
 
 declare global {
