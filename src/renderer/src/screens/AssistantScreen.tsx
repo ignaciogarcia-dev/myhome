@@ -580,11 +580,29 @@ export default function AssistantScreen(): React.JSX.Element {
   const handleTapButton = async (): Promise<void> => {
     try {
       if (isListening) {
-        // Stop listening → stop recording → generate transcript → send
-        await window.api.audio.stopListening()
-        const transcript = await stopRecordingAndGenerateTranscript()
-        setLastTranscript(transcript)
-        await window.api.assistant.sendMessage(transcript)
+        // IMPORTANT: Stop recording FIRST, then stop listening
+        // This prevents the MediaStream from being torn down before MediaRecorder finishes
+        setError(null)
+        let transcript = ''
+
+        try {
+          // 1) Stop MediaRecorder + build base64 + call STT
+          transcript = await stopRecordingAndGenerateTranscript()
+
+          // 2) Send message (only if transcript has content)
+          if (transcript.trim()) {
+            await window.api.assistant.sendMessage(transcript)
+            setLastTranscript(transcript)
+          } else {
+            setLastTranscript('(empty transcript)')
+          }
+        } catch (err) {
+          console.error('stop/send failed', err)
+          setError(String(err))
+        } finally {
+          // 3) Now it is safe to stop listening (this will tear down the stream)
+          await window.api.audio.stopListening()
+        }
         return
       }
 
