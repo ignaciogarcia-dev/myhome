@@ -1,11 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import {
-  CHANNELS,
-  type InvokeMap,
-  type EventMap,
-  type AssistantState,
-  type AssistantToken
-} from '../shared'
+import { CHANNELS, type InvokeMap, type EventMap } from '../shared'
 
 /**
  * Type-safe unsubscribe function returned from event listeners
@@ -50,10 +44,7 @@ export interface WindowApi {
      * Subscribe to assistant events
      * Returns an unsubscribe function for cleanup
      */
-    on<K extends keyof EventMap>(
-      event: K,
-      callback: (payload: EventMap[K]) => void
-    ): Unsubscribe
+    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe
 
     /**
      * Unsubscribe from assistant events
