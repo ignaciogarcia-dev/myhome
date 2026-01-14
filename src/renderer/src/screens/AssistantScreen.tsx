@@ -37,18 +37,53 @@ export default function AssistantScreen(): React.JSX.Element {
   // Refs for TTS
   const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
+  // Refs for speak-on-final policy
+  const activeMessageIdRef = useRef<string | null>(null)
+  const finalTextRef = useRef<string>('')
+  const shouldSpeakRef = useRef<boolean>(false)
+
   // Subscribe to assistant events
   useEffect(() => {
     let currentMessageId: string | null = null
 
     const unsubscribeState = window.api.assistant.on(
       CHANNELS.events.ASSISTANT_STATE,
-      (state: AssistantState) => {
+      async (state: AssistantState) => {
         setStatus(state.status)
         currentMessageId = state.messageId ?? null
         setMessageId(currentMessageId)
         if (state.error) {
           setError(state.error.message)
+        }
+
+        // Handle speak-on-final policy
+        if (state.status === 'thinking' || state.status === 'responding') {
+          shouldSpeakRef.current = true
+
+          const nextId = state.messageId ?? null
+          const prevId = activeMessageIdRef.current
+
+          // Reset buffer only when a NEW message starts
+          if (nextId && nextId !== prevId) {
+            activeMessageIdRef.current = nextId
+            finalTextRef.current = ''
+          } else if (!prevId && nextId) {
+            activeMessageIdRef.current = nextId
+            finalTextRef.current = ''
+          }
+        } else if (state.status === 'idle') {
+          // Snapshot and reset before awaiting to prevent duplicate speech
+          const textToSpeak = finalTextRef.current.trim()
+          const shouldSpeak = shouldSpeakRef.current
+
+          // Reset first to prevent double-fire and delayed speech
+          activeMessageIdRef.current = null
+          finalTextRef.current = ''
+          shouldSpeakRef.current = false
+
+          if (shouldSpeak && textToSpeak.length > 0) {
+            await window.api.tts.speak({ text: textToSpeak })
+          }
         }
       }
     )
@@ -63,6 +98,14 @@ export default function AssistantScreen(): React.JSX.Element {
           }
           return prev
         })
+
+        // Append tokens to finalTextRef only when matching activeMessageIdRef
+        if (
+          activeMessageIdRef.current &&
+          token.messageId === activeMessageIdRef.current
+        ) {
+          finalTextRef.current += token.token
+        }
       }
     )
 
@@ -589,6 +632,11 @@ export default function AssistantScreen(): React.JSX.Element {
       }
 
       if (status === 'thinking' || status === 'responding') {
+        // Reset speak-on-final refs FIRST to prevent delayed speech
+        activeMessageIdRef.current = null
+        finalTextRef.current = ''
+        shouldSpeakRef.current = false
+
         // Interrupt assistant and stop TTS
         await Promise.allSettled([window.api.assistant.cancel(), window.api.tts.stop()])
         setTokens([]) // Clear tokens
