@@ -1,6 +1,6 @@
 /**
  * Settings Domain Types
- * 
+ *
  * Defines the structure of application settings and partial updates.
  */
 

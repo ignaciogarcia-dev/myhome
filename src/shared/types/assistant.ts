@@ -1,6 +1,6 @@
 /**
  * Assistant Domain Types
- * 
+ *
  * Defines types for assistant interactions, state management, and streaming.
  */
 
