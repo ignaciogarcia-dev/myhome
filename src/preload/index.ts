@@ -138,6 +138,46 @@ const api = {
     ): Promise<InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['res']> => {
       return await ipcRenderer.invoke(CHANNELS.invoke.STT_TRANSCRIBE, payload)
     }
+  },
+
+  tts: {
+    /**
+     * Speak text using TTS
+     */
+    speak: async (
+      payload: InvokeMap[typeof CHANNELS.invoke.TTS_SPEAK]['req']
+    ): Promise<InvokeMap[typeof CHANNELS.invoke.TTS_SPEAK]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.TTS_SPEAK, payload)
+    },
+
+    /**
+     * Stop current TTS playback
+     */
+    stop: async (): Promise<InvokeMap[typeof CHANNELS.invoke.TTS_STOP]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.TTS_STOP)
+    },
+
+    /**
+     * Subscribe to TTS events
+     * Returns an unsubscribe function for cleanup
+     *
+     * Usage:
+     *   const unsubscribe = window.api.tts.on(CHANNELS.events.TTS_SPEAK, (payload) => {...})
+     *   // Later: unsubscribe()
+     */
+    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe {
+      // Type-safe event listener with automatic cleanup
+      const handler = (_event: Electron.IpcRendererEvent, payload: EventMap[K]): void => {
+        callback(payload)
+      }
+
+      ipcRenderer.on(event, handler)
+
+      // Return unsubscribe function
+      return () => {
+        ipcRenderer.removeListener(event, handler)
+      }
+    }
   }
 }
 
