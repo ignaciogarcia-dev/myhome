@@ -84,14 +84,18 @@ const api = {
     /**
      * Start listening to audio input
      */
-    startListening: async (): Promise<InvokeMap[typeof CHANNELS.invoke.AUDIO_START_LISTENING]['res']> => {
+    startListening: async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.AUDIO_START_LISTENING]['res']
+    > => {
       return await ipcRenderer.invoke(CHANNELS.invoke.AUDIO_START_LISTENING)
     },
 
     /**
      * Stop listening to audio input
      */
-    stopListening: async (): Promise<InvokeMap[typeof CHANNELS.invoke.AUDIO_STOP_LISTENING]['res']> => {
+    stopListening: async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.AUDIO_STOP_LISTENING]['res']
+    > => {
       return await ipcRenderer.invoke(CHANNELS.invoke.AUDIO_STOP_LISTENING)
     },
 
