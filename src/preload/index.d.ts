@@ -85,6 +85,25 @@ export interface WindowApi {
     ) => Promise<InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['res']>
   }
 
+  secrets: {
+    /**
+     * Set OpenAI API key
+     */
+    setOpenAIKey: (
+      apiKey: string
+    ) => Promise<InvokeMap[typeof CHANNELS.invoke.SECRETS_SET_OPENAI_KEY]['res']>
+
+    /**
+     * Check if OpenAI API key exists
+     */
+    hasOpenAIKey: () => Promise<InvokeMap[typeof CHANNELS.invoke.SECRETS_HAS_OPENAI_KEY]['res']>
+
+    /**
+     * Clear OpenAI API key
+     */
+    clearOpenAIKey: () => Promise<InvokeMap[typeof CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY]['res']>
+  }
+
   tts: {
     /**
      * Speak text using TTS
