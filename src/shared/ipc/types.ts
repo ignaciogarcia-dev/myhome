@@ -49,6 +49,20 @@ export interface InvokeMap {
       confidence?: number
     }
   }
+  [CHANNELS.invoke.TTS_SPEAK]: {
+    req: {
+      text: string
+      voice?: string
+      rate?: number
+      pitch?: number
+      volume?: number
+    }
+    res: { success: boolean }
+  }
+  [CHANNELS.invoke.TTS_STOP]: {
+    req: void
+    res: { success: boolean }
+  }
   [CHANNELS.invoke.AUDIO_START_LISTENING]: {
     req: void
     res: { success: boolean }
@@ -65,6 +79,14 @@ export interface EventMap {
   [CHANNELS.events.ASSISTANT_TOKEN]: AssistantToken
   [CHANNELS.events.AUDIO_STATE]: AudioState
   [CHANNELS.events.AUDIO_LEVEL]: AudioLevel
+  [CHANNELS.events.TTS_SPEAK]: {
+    text: string
+    voice?: string
+    rate?: number
+    pitch?: number
+    volume?: number
+  }
+  [CHANNELS.events.TTS_STOP]: void
 }
 
 // Type helpers for type-safe IPC calls
