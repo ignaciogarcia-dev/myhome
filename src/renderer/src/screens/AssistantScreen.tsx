@@ -129,6 +129,42 @@ export default function AssistantScreen(): React.JSX.Element {
 
       {error && <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>}
 
+      {/* Voice Control UI */}
+      <div style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}>
+        <h3 style={{ marginTop: 0 }}>Voice Control</h3>
+        <div style={{ marginBottom: '10px' }}>
+          <button onClick={handleToggleListening} style={{ marginRight: '10px' }}>
+            {isListening ? 'Stop Listening' : 'Start Listening'}
+          </button>
+          <span>
+            <strong>State:</strong> {isListening ? 'Listening' : 'Stopped'}
+          </span>
+        </div>
+        <div>
+          <strong>Level:</strong>
+          <div
+            style={{
+              width: '200px',
+              height: '20px',
+              border: '1px solid #ccc',
+              backgroundColor: '#f0f0f0',
+              marginTop: '5px',
+              position: 'relative'
+            }}
+          >
+            <div
+              style={{
+                width: `${audioLevel * 100}%`,
+                height: '100%',
+                backgroundColor: isListening ? '#4caf50' : '#ccc',
+                transition: 'width 0.05s ease-out'
+              }}
+            />
+          </div>
+          <span style={{ fontSize: '12px' }}>{(audioLevel * 100).toFixed(1)}%</span>
+        </div>
+      </div>
+
       <div style={{ marginBottom: '20px' }}>
         <input
           type="text"
