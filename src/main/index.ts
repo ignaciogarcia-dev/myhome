@@ -4,11 +4,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerSystemHandlers } from './ipc/system'
 import { registerSettingsHandlers } from './ipc/settings'
-import { registerAssistantHandlers } from './ipc/assistant'
-import { registerAudioHandlers } from './ipc/audio'
-import { registerSttHandlers } from './ipc/stt'
-import { registerTtsHandlers } from './ipc/tts'
 import { registerSecretsHandlers } from './ipc/secrets'
+import { registerRealtimeHandlers } from './ipc/realtime'
 
 /**
  * Register all IPC handlers
@@ -17,11 +14,8 @@ import { registerSecretsHandlers } from './ipc/secrets'
 function registerIpcHandlers(): void {
   registerSystemHandlers()
   registerSettingsHandlers()
-  registerAssistantHandlers()
-  registerAudioHandlers()
-  registerSttHandlers()
-  registerTtsHandlers()
   registerSecretsHandlers()
+  registerRealtimeHandlers()
 }
 
 function createWindow(): void {
@@ -39,6 +33,29 @@ function createWindow(): void {
       sandbox: false
     }
   })
+
+  if (is.dev) {
+    mainWindow.webContents.on('console-message', (details) => {
+      const { level, message, lineNumber, sourceId } = details
+      const levelMap: Record<string, 'log' | 'warn' | 'error' | 'debug'> = {
+        info: 'log',
+        warning: 'warn',
+        error: 'error',
+        debug: 'debug'
+      }
+      const label = levelMap[level] ?? 'log'
+      const prefix = `[renderer:${label}]`
+      const location = sourceId ? ` (${sourceId}:${lineNumber})` : ''
+
+      if (label === 'error') {
+        console.error(`${prefix} ${message}${location}`)
+      } else if (label === 'warn') {
+        console.warn(`${prefix} ${message}${location}`)
+      } else {
+        console.log(`${prefix} ${message}${location}`)
+      }
+    })
+  }
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
