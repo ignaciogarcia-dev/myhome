@@ -1,7 +1,20 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { registerSystemHandlers } from './ipc/system'
+import { registerSettingsHandlers } from './ipc/settings'
+import { registerAssistantHandlers } from './ipc/assistant'
+
+/**
+ * Register all IPC handlers
+ * Centralized registration point for all IPC domains
+ */
+function registerIpcHandlers(): void {
+  registerSystemHandlers()
+  registerSettingsHandlers()
+  registerAssistantHandlers()
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -13,6 +26,8 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true, // Security: isolate context from renderer
+      nodeIntegration: false, // Security: disable Node.js in renderer
       sandbox: false
     }
   })
@@ -49,8 +64,8 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // Register all IPC handlers
+  registerIpcHandlers()
 
   createWindow()
 
