@@ -16,6 +16,9 @@ export default function AssistantScreen(): React.JSX.Element {
   const [isListening, setIsListening] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
   const [micError, setMicError] = useState<string | null>(null)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingDuration, setRecordingDuration] = useState(0)
+  const [lastTranscript, setLastTranscript] = useState<string | null>(null)
 
   // Refs for microphone resources (non-UI state)
   const mediaStreamRef = useRef<MediaStream | null>(null)
@@ -23,6 +26,12 @@ export default function AssistantScreen(): React.JSX.Element {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
   const animationFrameIdRef = useRef<number | null>(null)
+
+  // Refs for MediaRecorder
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const recordingStartTimeRef = useRef<number | null>(null)
+  const recordingDurationIntervalRef = useRef<number | null>(null)
 
   // Subscribe to assistant events
   useEffect(() => {
