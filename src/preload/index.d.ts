@@ -84,6 +84,26 @@ export interface WindowApi {
       payload: InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['req']
     ) => Promise<InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['res']>
   }
+
+  tts: {
+    /**
+     * Speak text using TTS
+     */
+    speak: (
+      payload: InvokeMap[typeof CHANNELS.invoke.TTS_SPEAK]['req']
+    ) => Promise<InvokeMap[typeof CHANNELS.invoke.TTS_SPEAK]['res']>
+
+    /**
+     * Stop current TTS playback
+     */
+    stop: () => Promise<InvokeMap[typeof CHANNELS.invoke.TTS_STOP]['res']>
+
+    /**
+     * Subscribe to TTS events
+     * Returns an unsubscribe function for cleanup
+     */
+    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe
+  }
 }
 
 declare global {
