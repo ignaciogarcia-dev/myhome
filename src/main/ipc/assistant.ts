@@ -79,7 +79,7 @@ export function registerAssistantHandlers(): void {
   // Handle send message request
   ipcMain.handle(
     CHANNELS.invoke.ASSISTANT_SEND_MESSAGE,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     async (
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _event,
