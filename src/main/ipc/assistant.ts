@@ -53,8 +53,10 @@ function generateMessageId(): string {
 
 /**
  * Mock token generation - simulates streaming tokens from an LLM
+ * @param messageId - Unique identifier for the message
+ * @param _text - User's message text (currently unused in mock, but would be used in real LLM call)
  */
-async function simulateTokenStream(messageId: string, text: string): Promise<void> {
+async function simulateTokenStream(messageId: string, _text: string): Promise<void> {
   const mockTokens = ['Hello', '!', ' ', 'How', ' ', 'can', ' ', 'I', ' ', 'help', ' ', 'you', '?']
 
   for (let i = 0; i < mockTokens.length; i++) {
