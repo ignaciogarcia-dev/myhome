@@ -32,6 +32,7 @@ export default function AssistantScreen(): React.JSX.Element {
   const recordedChunksRef = useRef<Blob[]>([])
   const recordingStartTimeRef = useRef<number | null>(null)
   const recordingDurationIntervalRef = useRef<number | null>(null)
+  const recordingMimeTypeRef = useRef<string | null>(null)
 
   // Subscribe to assistant events
   useEffect(() => {
