@@ -86,16 +86,177 @@ export default function AssistantScreen(): React.JSX.Element {
     }
   }, [])
 
-  // Ensure stopListening is called on unmount if currently listening
+  /**
+   * Cleanup microphone resources
+   */
+  const cleanupMic = async (): Promise<void> => {
+    // Cancel animation frame
+    if (animationFrameIdRef.current !== null) {
+      cancelAnimationFrame(animationFrameIdRef.current)
+      animationFrameIdRef.current = null
+    }
+
+    // Stop all MediaStream tracks
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => {
+        track.stop()
+      })
+      mediaStreamRef.current = null
+    }
+
+    // Disconnect audio nodes
+    if (sourceRef.current) {
+      sourceRef.current.disconnect()
+      sourceRef.current = null
+    }
+    if (analyserRef.current) {
+      analyserRef.current.disconnect()
+      analyserRef.current = null
+    }
+
+    // Close AudioContext
+    if (audioContextRef.current) {
+      try {
+        await audioContextRef.current.close()
+      } catch (err) {
+        // Ignore errors when closing context
+      }
+      audioContextRef.current = null
+    }
+
+    // Reset audio level
+    setAudioLevel(0)
+  }
+
+  // Microphone capture: setup/teardown based on isListening state
   useEffect(() => {
-    return () => {
-      if (isListening) {
-        window.api.audio.stopListening().catch(() => {
+    if (!isListening) {
+      // Cleanup when stopping
+      cleanupMic().catch(() => {
+        // Ignore cleanup errors
+      })
+      return
+    }
+
+    // Setup microphone when starting
+    let mounted = true
+
+    const setupMicrophone = async (): Promise<void> => {
+      try {
+        setMicError(null)
+
+        // Request microphone permission
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        if (!mounted) {
+          // Component unmounted during async operation
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+
+        mediaStreamRef.current = stream
+
+        // Create AudioContext (handle browser prefixes)
+        const AudioContextClass =
+          window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+        const audioContext = new AudioContextClass()
+        audioContextRef.current = audioContext
+
+        // Create source node from MediaStream
+        const source = audioContext.createMediaStreamSource(stream)
+        sourceRef.current = source
+
+        // Create analyser node
+        const analyser = audioContext.createAnalyser()
+        analyser.fftSize = 2048
+        analyser.smoothingTimeConstant = 0.8
+        analyserRef.current = analyser
+
+        // Connect source -> analyser
+        source.connect(analyser)
+
+        // Start level computation loop
+        const bufferLength = analyser.fftSize
+        const dataArray = new Uint8Array(bufferLength)
+
+        const updateLevel = (): void => {
+          if (!mounted || !isListening || !analyserRef.current) {
+            return
+          }
+
+          // Get time-domain data (better for volume meters)
+          analyserRef.current.getByteTimeDomainData(dataArray)
+
+          // Compute RMS
+          let sum = 0
+          for (let i = 0; i < bufferLength; i++) {
+            const v = (dataArray[i] - 128) / 128 // Normalize to -1..1
+            sum += v * v
+          }
+          const rms = Math.sqrt(sum / bufferLength)
+          const level = Math.min(1, Math.max(0, rms)) // Clamp to 0..1
+
+          setAudioLevel(level)
+
+          animationFrameIdRef.current = requestAnimationFrame(updateLevel)
+        }
+
+        animationFrameIdRef.current = requestAnimationFrame(updateLevel)
+      } catch (err) {
+        if (!mounted) return
+
+        // Handle errors with user-friendly messages
+        let errorMessage = 'Failed to access microphone'
+        if (err instanceof Error) {
+          if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            errorMessage = 'Microphone permission denied. Please allow microphone access in your browser settings.'
+          } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+            errorMessage = 'No microphone found. Please connect a microphone device.'
+          } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+            errorMessage = 'Microphone is already in use by another application.'
+          } else if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+            errorMessage = 'Microphone constraints could not be satisfied.'
+          } else {
+            errorMessage = `Failed to access microphone: ${err.message}`
+          }
+        }
+
+        setMicError(errorMessage)
+
+        // Re-sync state with main process by calling stopListening
+        await window.api.audio.stopListening().catch(() => {
           // Ignore errors during cleanup
+        })
+
+        // Defensive cleanup in case partial setup happened
+        await cleanupMic().catch(() => {
+          // Ignore cleanup errors
         })
       }
     }
+
+    setupMicrophone()
+
+    return () => {
+      mounted = false
+      cleanupMic().catch(() => {
+        // Ignore cleanup errors
+      })
+    }
   }, [isListening])
+
+  // Ensure stopListening is called on unmount
+  useEffect(() => {
+    return () => {
+      // Always call stopListening on unmount (idempotent)
+      window.api.audio.stopListening().catch(() => {
+        // Ignore errors during cleanup
+      })
+      // Cleanup microphone resources
+      cleanupMic().catch(() => {
+        // Ignore cleanup errors
+      })
+    }
+  }, [])
 
   const handleSend = async (): Promise<void> => {
     if (!message.trim()) return
@@ -139,6 +300,9 @@ export default function AssistantScreen(): React.JSX.Element {
       <h2>Assistant</h2>
 
       {error && <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>}
+      {micError && (
+        <div style={{ color: 'red', marginBottom: '10px' }}>Microphone Error: {micError}</div>
+      )}
 
       {/* Voice Control UI */}
       <div
