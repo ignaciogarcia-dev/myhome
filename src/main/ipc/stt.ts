@@ -32,9 +32,6 @@ class MockSttProvider implements SttProvider {
     // Ignore audioBase64 and mimeType for now (mock-first)
     const { durationMs } = input
 
-    // Debug log
-    console.log('[STT Mock] Received durationMs:', durationMs, 'seconds:', (durationMs / 1000).toFixed(2))
-
     let text = 'User said something'
 
     // Generate mock transcript based on duration
@@ -85,18 +82,9 @@ export function registerSttHandlers(): void {
       _event,
       request: InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['req']
     ): Promise<InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['res']> => {
-      // Debug log
-      console.log('[STT Handler] Received request:', {
-        durationMs: request.durationMs,
-        durationSeconds: (request.durationMs / 1000).toFixed(2),
-        audioBase64Length: request.audioBase64?.length || 0,
-        mimeType: request.mimeType
-      })
-
       try {
         // Light validation
         if (request.durationMs <= 0 || !request.audioBase64) {
-          console.log('[STT Handler] Validation failed, using fallback')
           // Return fallback transcript
           return {
             text: generateFallbackTranscript(request.durationMs || 0),
