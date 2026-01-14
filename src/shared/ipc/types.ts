@@ -12,6 +12,7 @@ import type {
   SendMessageRequest,
   SendMessageResponse
 } from '../types/assistant'
+import type { AudioState, AudioLevel } from '../types/audio'
 import type { CHANNELS } from './channels'
 
 // Request/Response mapping for invoke channels
@@ -32,12 +33,22 @@ export interface InvokeMap {
     req: SendMessageRequest
     res: SendMessageResponse
   }
+  [CHANNELS.invoke.AUDIO_START_LISTENING]: {
+    req: void
+    res: { success: boolean }
+  }
+  [CHANNELS.invoke.AUDIO_STOP_LISTENING]: {
+    req: void
+    res: { success: boolean }
+  }
 }
 
 // Payload mapping for event channels
 export interface EventMap {
   [CHANNELS.events.ASSISTANT_STATE]: AssistantState
   [CHANNELS.events.ASSISTANT_TOKEN]: AssistantToken
+  [CHANNELS.events.AUDIO_STATE]: AudioState
+  [CHANNELS.events.AUDIO_LEVEL]: AudioLevel
 }
 
 // Type helpers for type-safe IPC calls
