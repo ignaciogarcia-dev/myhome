@@ -152,4 +152,34 @@ export function registerAssistantHandlers(): void {
       }
     }
   )
+
+  // Handle cancel request
+  ipcMain.handle(
+    CHANNELS.invoke.ASSISTANT_CANCEL,
+    async (): Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_CANCEL]['res']> => {
+      // Idempotent: if no active message, return success
+      if (!activeMessageId) {
+        return { success: true }
+      }
+
+      // Set cancel flag and clear active message
+      cancelActive = true
+
+      // Clear token timer if active
+      if (tokenTimer !== null) {
+        clearTimeout(tokenTimer)
+        tokenTimer = null
+      }
+
+      activeMessageId = null
+
+      // Emit state back to idle
+      updateState({
+        status: 'idle',
+        messageId: undefined
+      })
+
+      return { success: true }
+    }
+  )
 }
