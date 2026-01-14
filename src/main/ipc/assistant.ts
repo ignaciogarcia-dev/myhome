@@ -107,6 +107,10 @@ export function registerAssistantHandlers(): void {
       const messageId = generateMessageId()
       const createdAt = Date.now()
 
+      // Set active message and reset cancel flag
+      activeMessageId = messageId
+      cancelActive = false
+
       // Update state to "thinking"
       updateState({
         status: 'thinking',
@@ -116,6 +120,11 @@ export function registerAssistantHandlers(): void {
       // Simulate async processing with token streaming
       // In production, this would call an actual LLM API
       setTimeout(async () => {
+        // Check if cancelled before responding
+        if (cancelActive || activeMessageId !== messageId) {
+          return
+        }
+
         // Update state to "responding"
         updateState({
           status: 'responding',
@@ -125,11 +134,15 @@ export function registerAssistantHandlers(): void {
         // Stream mock tokens
         await simulateTokenStream(messageId)
 
-        // Update state back to "idle"
-        updateState({
-          status: 'idle',
-          messageId: undefined
-        })
+        // Check if still active before completing
+        if (activeMessageId === messageId && !cancelActive) {
+          activeMessageId = null
+          // Update state back to "idle"
+          updateState({
+            status: 'idle',
+            messageId: undefined
+          })
+        }
       }, 500) // Small delay before starting response
 
       return {
