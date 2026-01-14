@@ -1,6 +1,6 @@
 /**
  * System IPC Handlers
- * 
+ *
  * Handles system-level IPC calls like ping for connectivity testing.
  */
 
