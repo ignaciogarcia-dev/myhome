@@ -13,6 +13,13 @@ import { CHANNELS, type InvokeMap, DEFAULT_SETTINGS, type Settings } from '../..
 let currentSettings: Settings = { ...DEFAULT_SETTINGS }
 
 /**
+ * Get current settings (exported for use by other IPC handlers)
+ */
+export function getCurrentSettings(): Settings {
+  return { ...currentSettings }
+}
+
+/**
  * Register settings IPC handlers
  */
 export function registerSettingsHandlers(): void {
