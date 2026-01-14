@@ -258,9 +258,36 @@ export default function AssistantScreen(): React.JSX.Element {
     }
   }, [isListening])
 
+  // Start recording when stream becomes available and listening is active
+  useEffect(() => {
+    if (isListening && mediaStreamRef.current && !isRecording) {
+      startRecording()
+    }
+    // Defensive: stop recording if listening stops unexpectedly
+    if (!isListening && isRecording) {
+      stopRecordingAndGenerateTranscript().catch(() => {
+        // Ignore errors during defensive cleanup
+      })
+    }
+  }, [isListening, isRecording])
+
   // Ensure stopListening is called on unmount
   useEffect(() => {
     return () => {
+      // Stop MediaRecorder if active
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop()
+      }
+
+      // Clear recording interval
+      if (recordingDurationIntervalRef.current !== null) {
+        clearInterval(recordingDurationIntervalRef.current)
+        recordingDurationIntervalRef.current = null
+      }
+
+      // Clear chunks
+      recordedChunksRef.current = []
+
       // Always call stopListening on unmount (idempotent)
       window.api.audio.stopListening().catch(() => {
         // Ignore errors during cleanup
@@ -270,7 +297,7 @@ export default function AssistantScreen(): React.JSX.Element {
         // Ignore cleanup errors
       })
     }
-  }, [])
+  }, [isRecording])
 
   const handleSend = async (): Promise<void> => {
     if (!message.trim()) return
