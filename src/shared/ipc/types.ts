@@ -40,21 +40,6 @@ export interface InvokeMap {
   }
 }
 
-// Payload mapping for event channels
-export interface EventMap {
-  [CHANNELS.events.REALTIME_TRANSCRIPTION_DELTA]: {
-    text: string
-    isUser: boolean
-    messageId: string
-  }
-  [CHANNELS.events.REALTIME_TRANSCRIPTION_COMPLETE]: {
-    text: string
-    isUser: boolean
-    messageId: string
-  }
-}
-
 // Type helpers for type-safe IPC calls
 export type InvokeRequest<K extends keyof InvokeMap> = InvokeMap[K]['req']
 export type InvokeResponse<K extends keyof InvokeMap> = InvokeMap[K]['res']
-export type EventPayload<K extends keyof EventMap> = EventMap[K]
