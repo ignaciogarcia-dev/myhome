@@ -65,6 +65,8 @@ export function useRealtimeAgent(
   const audioStreamRef = useRef<MediaStream | null>(null)
   const tracksRef = useRef<RTCRtpSender[]>([])
   const dcCleanupRef = useRef<(() => void) | null>(null)
+  const placeholderTrackRef = useRef<MediaStreamTrack | null>(null)
+  const placeholderAudioContextRef = useRef<AudioContext | null>(null)
 
   // Synchronization state management
   const currentMessageIdRef = useRef<string | null>(null)
@@ -106,17 +108,18 @@ export function useRealtimeAgent(
 
       console.log('[Realtime] Session token obtained, creating WebRTC connection')
 
-      // Get user media stream
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true
-      })
+      // Do NOT request microphone permissions here.
+      // Start WebRTC with a placeholder silent track; we'll replace it on unmute.
+      const { track: placeholderTrack, audioContext } = createSilentAudioTrack()
+      placeholderTrackRef.current = placeholderTrack
+      placeholderAudioContextRef.current = audioContext
+      const placeholderStream = new MediaStream([placeholderTrack])
 
-      audioStreamRef.current = stream
       const conn = await createRealtimeWebRtcConnection({
         sessionToken,
         baseUrl: BASE_URL,
         model: MODEL,
-        initialStream: stream
+        initialStream: placeholderStream
       })
 
       connRef.current = conn
@@ -129,7 +132,7 @@ export function useRealtimeAgent(
         onOpen: () => {
           console.log('[Realtime] Data channel opened')
           setIsSessionActive(true)
-          setIsListening(true)
+          setIsListening(false)
 
           const sessionUpdate = createSessionUpdate()
           sendClientEvent(sessionUpdate)
@@ -237,10 +240,24 @@ export function useRealtimeAgent(
     closeRealtimeWebRtcConnection(connRef.current)
     connRef.current = null
 
-    // Stop audio tracks
+    // Stop real mic tracks (if any)
     if (audioStreamRef.current) {
       audioStreamRef.current.getTracks().forEach((track) => track.stop())
       audioStreamRef.current = null
+    }
+
+    // Stop placeholder track + close its AudioContext
+    if (placeholderTrackRef.current) {
+      try {
+        placeholderTrackRef.current.stop()
+      } catch {
+        // ignore
+      }
+      placeholderTrackRef.current = null
+    }
+    if (placeholderAudioContextRef.current) {
+      void placeholderAudioContextRef.current.close().catch(() => undefined)
+      placeholderAudioContextRef.current = null
     }
 
     setIsSessionStarted(false)
@@ -299,7 +316,12 @@ export function useRealtimeAgent(
 
     // Replace with placeholder (silent) track
     if (tracksRef.current.length > 0) {
-      const placeholderTrack = createEmptyAudioTrack()
+      if (!placeholderTrackRef.current || placeholderTrackRef.current.readyState === 'ended') {
+        const { track, audioContext } = createSilentAudioTrack()
+        placeholderTrackRef.current = track
+        placeholderAudioContextRef.current = audioContext
+      }
+      const placeholderTrack = placeholderTrackRef.current
       tracksRef.current.forEach((sender) => {
         sender.replaceTrack(placeholderTrack)
       })
@@ -308,11 +330,12 @@ export function useRealtimeAgent(
     console.log('[Realtime] Microphone stopped')
   }, [])
 
-  // Create empty audio track for placeholder
-  function createEmptyAudioTrack(): MediaStreamTrack {
+  function createSilentAudioTrack(): { track: MediaStreamTrack; audioContext: AudioContext } {
+    // A silent track built from an AudioContext destination.
+    // Caller must close the AudioContext (we do it in stopSession()).
     const audioContext = new AudioContext()
     const destination = audioContext.createMediaStreamDestination()
-    return destination.stream.getAudioTracks()[0]
+    return { track: destination.stream.getAudioTracks()[0], audioContext }
   }
 
   // Handle data channel messages
