@@ -10,6 +10,7 @@ export const CHANNELS = {
     SETTINGS_GET: 'settings:get',
     SETTINGS_SET: 'settings:set',
     ASSISTANT_SEND_MESSAGE: 'assistant:send-message',
+    ASSISTANT_CANCEL: 'assistant:cancel',
     AUDIO_START_LISTENING: 'audio:start-listening',
     AUDIO_STOP_LISTENING: 'audio:stop-listening'
   },
