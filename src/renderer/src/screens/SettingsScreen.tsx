@@ -30,7 +30,15 @@ export default function SettingsScreen(): React.JSX.Element {
     setLoading(true)
     setError(null)
     try {
-      const updatedSettings = await window.api.settings.set({ theme, language })
+      // Type assertion: theme should be 'light' | 'dark' | 'auto', but we allow user input
+      const partial: { theme?: 'light' | 'dark' | 'auto'; language?: string } = {}
+      if (theme && (theme === 'light' || theme === 'dark' || theme === 'auto')) {
+        partial.theme = theme
+      }
+      if (language) {
+        partial.language = language
+      }
+      const updatedSettings = await window.api.settings.set(partial)
       setSettings(updatedSettings)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings')
