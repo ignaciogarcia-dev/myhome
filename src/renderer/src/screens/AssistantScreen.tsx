@@ -118,7 +118,7 @@ export default function AssistantScreen(): React.JSX.Element {
     if (audioContextRef.current) {
       try {
         await audioContextRef.current.close()
-      } catch (err) {
+      } catch {
         // Ignore errors when closing context
       }
       audioContextRef.current = null
@@ -157,7 +157,8 @@ export default function AssistantScreen(): React.JSX.Element {
 
         // Create AudioContext (handle browser prefixes)
         const AudioContextClass =
-          window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
         const audioContext = new AudioContextClass()
         audioContextRef.current = audioContext
 
