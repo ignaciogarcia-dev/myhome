@@ -1,6 +1,6 @@
 /**
  * IPC Channel Constants
- * 
+ *
  * Centralized channel names to prevent typos and ensure consistency
  * across main process, preload, and renderer.
  */
@@ -18,5 +18,5 @@ export const CHANNELS = {
 } as const
 
 // Type helpers for channel names
-export type InvokeChannel = typeof CHANNELS.invoke[keyof typeof CHANNELS.invoke]
-export type EventChannel = typeof CHANNELS.events[keyof typeof CHANNELS.events]
+export type InvokeChannel = (typeof CHANNELS.invoke)[keyof typeof CHANNELS.invoke]
+export type EventChannel = (typeof CHANNELS.events)[keyof typeof CHANNELS.events]
