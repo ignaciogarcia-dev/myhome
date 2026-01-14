@@ -1,8 +1,71 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import {
+  CHANNELS,
+  type InvokeMap,
+  type EventMap,
+  type AssistantState,
+  type AssistantToken
+} from '../shared'
+
+/**
+ * Type-safe unsubscribe function returned from event listeners
+ */
+type Unsubscribe = () => void
+
+/**
+ * Typed API interface exposed to renderer process
+ * Matches the implementation in src/preload/index.ts
+ */
+export interface WindowApi {
+  system: {
+    /**
+     * Ping the main process to test connectivity
+     */
+    ping: () => Promise<InvokeMap[typeof CHANNELS.invoke.SYSTEM_PING]['res']>
+  }
+
+  settings: {
+    /**
+     * Get current settings
+     */
+    get: () => Promise<InvokeMap[typeof CHANNELS.invoke.SETTINGS_GET]['res']>
+
+    /**
+     * Update settings (partial merge)
+     */
+    set: (
+      partial: InvokeMap[typeof CHANNELS.invoke.SETTINGS_SET]['req']
+    ) => Promise<InvokeMap[typeof CHANNELS.invoke.SETTINGS_SET]['res']>
+  }
+
+  assistant: {
+    /**
+     * Send a message to the assistant
+     */
+    sendMessage: (
+      text: string
+    ) => Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['res']>
+
+    /**
+     * Subscribe to assistant events
+     * Returns an unsubscribe function for cleanup
+     */
+    on<K extends keyof EventMap>(
+      event: K,
+      callback: (payload: EventMap[K]) => void
+    ): Unsubscribe
+
+    /**
+     * Unsubscribe from assistant events
+     * Note: Prefer using the unsubscribe function returned from .on()
+     */
+    off: (event: keyof EventMap, callback: (...args: unknown[]) => void) => void
+  }
+}
 
 declare global {
   interface Window {
     electron: ElectronAPI
-    api: unknown
+    api: WindowApi
   }
 }
