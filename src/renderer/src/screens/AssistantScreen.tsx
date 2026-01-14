@@ -34,6 +34,9 @@ export default function AssistantScreen(): React.JSX.Element {
   const recordingDurationIntervalRef = useRef<number | null>(null)
   const recordingMimeTypeRef = useRef<string | null>(null)
 
+  // Refs for TTS
+  const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+
   // Subscribe to assistant events
   useEffect(() => {
     let currentMessageId: string | null = null
