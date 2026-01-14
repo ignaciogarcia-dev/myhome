@@ -378,9 +378,10 @@ export default function AssistantScreen(): React.JSX.Element {
           setVoice()
           window.speechSynthesis.speak(utterance)
           currentUtteranceRef.current = utterance
-          window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged)
+          // Remove the event listener (SpeechSynthesis uses onvoiceschanged property)
+          window.speechSynthesis.onvoiceschanged = null
         }
-        window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged)
+        window.speechSynthesis.onvoiceschanged = onVoicesChanged
       } else {
         // Speak immediately
         window.speechSynthesis.speak(utterance)
