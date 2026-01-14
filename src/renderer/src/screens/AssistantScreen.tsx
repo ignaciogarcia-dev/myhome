@@ -282,6 +282,9 @@ export default function AssistantScreen(): React.JSX.Element {
         )
         mediaRecorderRef.current = recorder
 
+        // Store mimeType (MediaRecorder.mimeType can be empty in some builds)
+        recordingMimeTypeRef.current = recorder.mimeType || mimeType || 'audio/webm'
+
         // Handle data available
         recorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
