@@ -19,6 +19,7 @@ export default function AssistantScreen(): React.JSX.Element {
     try {
       if (realtimeAgent.isSessionStarted) {
         realtimeAgent.stopSession()
+        setError(null)
       } else {
         await realtimeAgent.startSession()
         setError(null)
@@ -44,7 +45,11 @@ export default function AssistantScreen(): React.JSX.Element {
     <div style={{ padding: '20px' }}>
       <h2>Assistant</h2>
 
-      {error && <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>}
+      {(error || realtimeAgent.error) && (
+        <div style={{ color: 'red', marginBottom: '10px' }}>
+          <strong>Error:</strong> {error || realtimeAgent.error}
+        </div>
+      )}
 
       {/* Voice Control UI */}
       <div
@@ -59,7 +64,6 @@ export default function AssistantScreen(): React.JSX.Element {
         <div style={{ marginBottom: '10px' }}>
           <button
             onClick={handleConnect}
-            disabled={!realtimeAgent.isSessionStarted && realtimeAgent.isSessionActive}
             style={{ marginRight: '10px', padding: '10px 20px' }}
           >
             {realtimeAgent.isSessionStarted ? 'Disconnect' : 'Connect'}
@@ -71,17 +75,34 @@ export default function AssistantScreen(): React.JSX.Element {
           >
             {realtimeAgent.isListening ? 'Mute' : 'Unmute'}
           </button>
-          {realtimeAgent.isSessionActive && (
-            <span
-              style={{
-                color: realtimeAgent.isListening ? '#4caf50' : '#ff9800',
-                fontWeight: 'bold',
-                marginLeft: '10px'
-              }}
-            >
-              {realtimeAgent.isListening ? '● Listening' : '○ Muted'}
-            </span>
-          )}
+          <span
+            style={{
+              color: realtimeAgent.isSessionActive
+                ? realtimeAgent.isListening
+                  ? '#4caf50'
+                  : '#ff9800'
+                : '#9e9e9e',
+              fontWeight: 'bold',
+              marginLeft: '10px'
+            }}
+          >
+            {realtimeAgent.isSessionActive
+              ? realtimeAgent.isListening
+                ? '● Listening'
+                : '○ Muted'
+              : '○ Disconnected'}
+          </span>
+        </div>
+
+        <div style={{ marginBottom: '10px', fontSize: 12, color: '#666' }}>
+          <div>
+            <strong>Session:</strong>{' '}
+            {realtimeAgent.isSessionStarted ? 'Started' : 'Not started'} /{' '}
+            {realtimeAgent.isSessionActive ? 'Active' : 'Inactive'}
+          </div>
+          <div>
+            <strong>Microphone:</strong> {realtimeAgent.isListening ? 'On' : 'Off'}
+          </div>
         </div>
 
         {realtimeAgent.messages.length > 0 && (
@@ -104,12 +125,6 @@ export default function AssistantScreen(): React.JSX.Element {
                   )}
                 </div>
               ))}
-          </div>
-        )}
-
-        {realtimeAgent.error && (
-          <div style={{ marginBottom: '10px', color: 'red' }}>
-            <strong>Realtime Error:</strong> {realtimeAgent.error}
           </div>
         )}
       </div>
