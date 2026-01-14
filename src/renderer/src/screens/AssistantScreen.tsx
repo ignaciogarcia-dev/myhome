@@ -209,12 +209,16 @@ export default function AssistantScreen(): React.JSX.Element {
         let errorMessage = 'Failed to access microphone'
         if (err instanceof Error) {
           if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-            errorMessage = 'Microphone permission denied. Please allow microphone access in your browser settings.'
+            errorMessage =
+              'Microphone permission denied. Please allow microphone access in your browser settings.'
           } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
             errorMessage = 'No microphone found. Please connect a microphone device.'
           } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
             errorMessage = 'Microphone is already in use by another application.'
-          } else if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+          } else if (
+            err.name === 'OverconstrainedError' ||
+            err.name === 'ConstraintNotSatisfiedError'
+          ) {
             errorMessage = 'Microphone constraints could not be satisfied.'
           } else {
             errorMessage = `Failed to access microphone: ${err.message}`
