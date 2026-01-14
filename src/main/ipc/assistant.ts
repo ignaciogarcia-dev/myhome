@@ -81,7 +81,7 @@ export function registerAssistantHandlers(): void {
     CHANNELS.invoke.ASSISTANT_SEND_MESSAGE,
     async (
       _event,
-      request: InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['req']
+      _request: InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['req']
     ): Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['res']> => {
       const messageId = generateMessageId()
       const createdAt = Date.now()
