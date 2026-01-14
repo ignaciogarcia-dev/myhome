@@ -81,7 +81,9 @@ export function registerAssistantHandlers(): void {
     CHANNELS.invoke.ASSISTANT_SEND_MESSAGE,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _event,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _request: InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['req']
     ): Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['res']> => {
       // Note: _request.text is available but unused in mock implementation
