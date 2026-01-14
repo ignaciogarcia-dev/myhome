@@ -11,10 +11,7 @@ import { CHANNELS, type InvokeMap, type EventMap } from '../../shared'
 /**
  * Broadcast TTS command to all renderer processes
  */
-function broadcastTtsCommand<K extends keyof EventMap>(
-  channel: K,
-  payload: EventMap[K]
-): void {
+function broadcastTtsCommand<K extends keyof EventMap>(channel: K, payload: EventMap[K]): void {
   const windows = BrowserWindow.getAllWindows()
   windows.forEach((win) => {
     if (!win.isDestroyed()) {
@@ -31,7 +28,6 @@ export function registerTtsHandlers(): void {
   ipcMain.handle(
     CHANNELS.invoke.TTS_SPEAK,
     async (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _event,
       request: InvokeMap[typeof CHANNELS.invoke.TTS_SPEAK]['req']
     ): Promise<InvokeMap[typeof CHANNELS.invoke.TTS_SPEAK]['res']> => {
