@@ -6,13 +6,6 @@
  */
 
 import type { Settings, PartialSettings } from '../types/settings'
-import type {
-  AssistantState,
-  AssistantToken,
-  SendMessageRequest,
-  SendMessageResponse
-} from '../types/assistant'
-import type { AudioState, AudioLevel } from '../types/audio'
 import type { CHANNELS } from './channels'
 
 // Request/Response mapping for invoke channels
@@ -29,26 +22,6 @@ export interface InvokeMap {
     req: PartialSettings
     res: Settings // Return updated settings
   }
-  [CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]: {
-    req: SendMessageRequest
-    res: SendMessageResponse
-  }
-  [CHANNELS.invoke.ASSISTANT_CANCEL]: {
-    req: void
-    res: { success: boolean }
-  }
-  [CHANNELS.invoke.STT_TRANSCRIBE]: {
-    req: {
-      audioBase64: string
-      mimeType: string
-      durationMs: number
-    }
-    res: {
-      text: string
-      provider: 'mock' | 'openai'
-      confidence?: number
-    }
-  }
   [CHANNELS.invoke.SECRETS_SET_OPENAI_KEY]: {
     req: { apiKey: string }
     res: { success: boolean }
@@ -61,44 +34,24 @@ export interface InvokeMap {
     req: void
     res: { success: boolean }
   }
-  [CHANNELS.invoke.TTS_SPEAK]: {
-    req: {
-      text: string
-      voice?: string
-      rate?: number
-      pitch?: number
-      volume?: number
-    }
-    res: { success: boolean }
-  }
-  [CHANNELS.invoke.TTS_STOP]: {
-    req: void
-    res: { success: boolean }
-  }
-  [CHANNELS.invoke.AUDIO_START_LISTENING]: {
-    req: void
-    res: { success: boolean }
-  }
-  [CHANNELS.invoke.AUDIO_STOP_LISTENING]: {
-    req: void
-    res: { success: boolean }
+  [CHANNELS.invoke.REALTIME_GET_SESSION]: {
+    req: { backendUrl?: string }
+    res: { clientSecret: string; sessionId: string; expiresAt: number }
   }
 }
 
 // Payload mapping for event channels
 export interface EventMap {
-  [CHANNELS.events.ASSISTANT_STATE]: AssistantState
-  [CHANNELS.events.ASSISTANT_TOKEN]: AssistantToken
-  [CHANNELS.events.AUDIO_STATE]: AudioState
-  [CHANNELS.events.AUDIO_LEVEL]: AudioLevel
-  [CHANNELS.events.TTS_SPEAK]: {
+  [CHANNELS.events.REALTIME_TRANSCRIPTION_DELTA]: {
     text: string
-    voice?: string
-    rate?: number
-    pitch?: number
-    volume?: number
+    isUser: boolean
+    messageId: string
   }
-  [CHANNELS.events.TTS_STOP]: void
+  [CHANNELS.events.REALTIME_TRANSCRIPTION_COMPLETE]: {
+    text: string
+    isUser: boolean
+    messageId: string
+  }
 }
 
 // Type helpers for type-safe IPC calls

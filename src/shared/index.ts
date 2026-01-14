@@ -11,5 +11,3 @@ export * from './ipc/types'
 
 // Domain types
 export * from './types/settings'
-export * from './types/assistant'
-export * from './types/audio'

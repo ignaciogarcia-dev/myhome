@@ -1,11 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { CHANNELS, type InvokeMap, type EventMap } from '../shared'
-
-/**
- * Type-safe unsubscribe function returned from event listeners
- */
-type Unsubscribe = () => void
+import { CHANNELS, type InvokeMap } from '../shared'
 
 /**
  * Typed API exposed to renderer process
@@ -39,107 +34,6 @@ const api = {
     }
   },
 
-  assistant: {
-    /**
-     * Send a message to the assistant
-     */
-    sendMessage: async (
-      text: string
-    ): Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['res']> => {
-      return await ipcRenderer.invoke(CHANNELS.invoke.ASSISTANT_SEND_MESSAGE, { text })
-    },
-
-    /**
-     * Cancel the current assistant operation
-     */
-    cancel: async (): Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_CANCEL]['res']> => {
-      return await ipcRenderer.invoke(CHANNELS.invoke.ASSISTANT_CANCEL)
-    },
-
-    /**
-     * Subscribe to assistant events
-     * Returns an unsubscribe function for cleanup
-     *
-     * Usage:
-     *   const unsubscribe = window.api.assistant.on(CHANNELS.events.ASSISTANT_STATE, (state) => {...})
-     *   // Later: unsubscribe()
-     */
-    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe {
-      // Type-safe event listener with automatic cleanup
-      const handler = (_event: Electron.IpcRendererEvent, payload: EventMap[K]): void => {
-        callback(payload)
-      }
-
-      ipcRenderer.on(event, handler)
-
-      // Return unsubscribe function
-      return () => {
-        ipcRenderer.removeListener(event, handler)
-      }
-    },
-
-    /**
-     * Unsubscribe from assistant events
-     * Note: Prefer using the unsubscribe function returned from .on()
-     */
-    off: (event: keyof EventMap, callback: (...args: unknown[]) => void): void => {
-      ipcRenderer.removeListener(event, callback)
-    }
-  },
-
-  audio: {
-    /**
-     * Start listening to audio input
-     */
-    startListening: async (): Promise<
-      InvokeMap[typeof CHANNELS.invoke.AUDIO_START_LISTENING]['res']
-    > => {
-      return await ipcRenderer.invoke(CHANNELS.invoke.AUDIO_START_LISTENING)
-    },
-
-    /**
-     * Stop listening to audio input
-     */
-    stopListening: async (): Promise<
-      InvokeMap[typeof CHANNELS.invoke.AUDIO_STOP_LISTENING]['res']
-    > => {
-      return await ipcRenderer.invoke(CHANNELS.invoke.AUDIO_STOP_LISTENING)
-    },
-
-    /**
-     * Subscribe to audio events
-     * Returns an unsubscribe function for cleanup
-     *
-     * Usage:
-     *   const unsubscribe = window.api.audio.on(CHANNELS.events.AUDIO_STATE, (state) => {...})
-     *   // Later: unsubscribe()
-     */
-    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe {
-      // Type-safe event listener with automatic cleanup
-      const handler = (_event: Electron.IpcRendererEvent, payload: EventMap[K]): void => {
-        callback(payload)
-      }
-
-      ipcRenderer.on(event, handler)
-
-      // Return unsubscribe function
-      return () => {
-        ipcRenderer.removeListener(event, handler)
-      }
-    }
-  },
-
-  stt: {
-    /**
-     * Transcribe audio to text
-     */
-    transcribe: async (
-      payload: InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['req']
-    ): Promise<InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['res']> => {
-      return await ipcRenderer.invoke(CHANNELS.invoke.STT_TRANSCRIBE, payload)
-    }
-  },
-
   secrets: {
     /**
      * Set OpenAI API key
@@ -169,43 +63,14 @@ const api = {
     }
   },
 
-  tts: {
+  realtime: {
     /**
-     * Speak text using TTS
+     * Get Realtime API session (ephemeral token)
      */
-    speak: async (
-      payload: InvokeMap[typeof CHANNELS.invoke.TTS_SPEAK]['req']
-    ): Promise<InvokeMap[typeof CHANNELS.invoke.TTS_SPEAK]['res']> => {
-      return await ipcRenderer.invoke(CHANNELS.invoke.TTS_SPEAK, payload)
-    },
-
-    /**
-     * Stop current TTS playback
-     */
-    stop: async (): Promise<InvokeMap[typeof CHANNELS.invoke.TTS_STOP]['res']> => {
-      return await ipcRenderer.invoke(CHANNELS.invoke.TTS_STOP)
-    },
-
-    /**
-     * Subscribe to TTS events
-     * Returns an unsubscribe function for cleanup
-     *
-     * Usage:
-     *   const unsubscribe = window.api.tts.on(CHANNELS.events.TTS_SPEAK, (payload) => {...})
-     *   // Later: unsubscribe()
-     */
-    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe {
-      // Type-safe event listener with automatic cleanup
-      const handler = (_event: Electron.IpcRendererEvent, payload: EventMap[K]): void => {
-        callback(payload)
-      }
-
-      ipcRenderer.on(event, handler)
-
-      // Return unsubscribe function
-      return () => {
-        ipcRenderer.removeListener(event, handler)
-      }
+    getSession: async (
+      payload: InvokeMap[typeof CHANNELS.invoke.REALTIME_GET_SESSION]['req']
+    ): Promise<InvokeMap[typeof CHANNELS.invoke.REALTIME_GET_SESSION]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.REALTIME_GET_SESSION, payload)
     }
   }
 }

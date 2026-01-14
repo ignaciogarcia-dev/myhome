@@ -8,8 +8,6 @@ export default function SettingsScreen(): React.JSX.Element {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [theme, setTheme] = useState<string>('')
   const [language, setLanguage] = useState<string>('')
-  const [sttProvider, setSttProvider] = useState<'mock' | 'openai'>('mock')
-  const [sttModel, setSttModel] = useState<string>('gpt-4o-mini-transcribe')
   const [openaiKey, setOpenaiKey] = useState<string>('')
   const [hasOpenaiKey, setHasOpenaiKey] = useState<boolean>(false)
   const [loading, setLoading] = useState(false)
@@ -23,8 +21,6 @@ export default function SettingsScreen(): React.JSX.Element {
         setSettings(currentSettings)
         setTheme(currentSettings.theme)
         setLanguage(currentSettings.language)
-        setSttProvider(currentSettings.sttProvider)
-        setSttModel(currentSettings.sttModel)
 
         // Check if OpenAI key exists
         const keyCheck = await window.api.secrets.hasOpenAIKey()
@@ -44,20 +40,12 @@ export default function SettingsScreen(): React.JSX.Element {
       const partial: {
         theme?: 'light' | 'dark' | 'auto'
         language?: string
-        sttProvider?: 'mock' | 'openai'
-        sttModel?: 'gpt-4o-mini-transcribe' | 'gpt-4o-transcribe' | 'whisper-1'
       } = {}
       if (theme && (theme === 'light' || theme === 'dark' || theme === 'auto')) {
         partial.theme = theme
       }
       if (language) {
         partial.language = language
-      }
-      if (sttProvider) {
-        partial.sttProvider = sttProvider
-      }
-      if (sttModel) {
-        partial.sttModel = sttModel as 'gpt-4o-mini-transcribe' | 'gpt-4o-transcribe' | 'whisper-1'
       }
       const updatedSettings = await window.api.settings.set(partial)
       setSettings(updatedSettings)
@@ -119,40 +107,11 @@ export default function SettingsScreen(): React.JSX.Element {
       </div>
 
       <div style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
-        <h3 style={{ marginTop: 0 }}>Speech-to-Text (STT)</h3>
+        <h3 style={{ marginTop: 0 }}>OpenAI API Key</h3>
 
         <div style={{ marginBottom: '10px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>
-            Provider:
-            <select
-              value={sttProvider}
-              onChange={(e) => setSttProvider(e.target.value as 'mock' | 'openai')}
-              style={{ marginLeft: '10px', padding: '5px' }}
-            >
-              <option value="mock">Mock</option>
-              <option value="openai">OpenAI</option>
-            </select>
-          </label>
-        </div>
-
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            Model:
-            <select
-              value={sttModel}
-              onChange={(e) => setSttModel(e.target.value)}
-              style={{ marginLeft: '10px', padding: '5px' }}
-            >
-              <option value="gpt-4o-mini-transcribe">gpt-4o-mini-transcribe</option>
-              <option value="gpt-4o-transcribe">gpt-4o-transcribe</option>
-              <option value="whisper-1">whisper-1</option>
-            </select>
-          </label>
-        </div>
-
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            OpenAI API Key:
+            API Key:
             <input
               type="password"
               value={openaiKey}
@@ -184,8 +143,6 @@ export default function SettingsScreen(): React.JSX.Element {
           <h3>Current Settings:</h3>
           <div>Theme: {settings.theme}</div>
           <div>Language: {settings.language}</div>
-          <div>STT Provider: {settings.sttProvider}</div>
-          <div>STT Model: {settings.sttModel}</div>
           <div>Schema Version: {settings.schemaVersion}</div>
         </div>
       )}

@@ -9,24 +9,14 @@ export const CHANNELS = {
     SYSTEM_PING: 'system:ping',
     SETTINGS_GET: 'settings:get',
     SETTINGS_SET: 'settings:set',
-    ASSISTANT_SEND_MESSAGE: 'assistant:send-message',
-    ASSISTANT_CANCEL: 'assistant:cancel',
-    STT_TRANSCRIBE: 'stt:transcribe',
     SECRETS_SET_OPENAI_KEY: 'secrets:set-openai-key',
     SECRETS_HAS_OPENAI_KEY: 'secrets:has-openai-key',
     SECRETS_CLEAR_OPENAI_KEY: 'secrets:clear-openai-key',
-    TTS_SPEAK: 'tts:speak',
-    TTS_STOP: 'tts:stop',
-    AUDIO_START_LISTENING: 'audio:start-listening',
-    AUDIO_STOP_LISTENING: 'audio:stop-listening'
+    REALTIME_GET_SESSION: 'realtime:get-session'
   },
   events: {
-    ASSISTANT_STATE: 'assistant:state',
-    ASSISTANT_TOKEN: 'assistant:token',
-    AUDIO_STATE: 'audio:state',
-    AUDIO_LEVEL: 'audio:level',
-    TTS_SPEAK: 'tts:speak',
-    TTS_STOP: 'tts:stop'
+    REALTIME_TRANSCRIPTION_DELTA: 'realtime:transcription-delta',
+    REALTIME_TRANSCRIPTION_COMPLETE: 'realtime:transcription-complete'
   }
 } as const
 
