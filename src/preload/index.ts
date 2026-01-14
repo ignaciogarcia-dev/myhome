@@ -78,6 +78,44 @@ const api = {
     off: (event: keyof EventMap, callback: (...args: unknown[]) => void): void => {
       ipcRenderer.removeListener(event, callback)
     }
+  },
+
+  audio: {
+    /**
+     * Start listening to audio input
+     */
+    startListening: async (): Promise<InvokeMap[typeof CHANNELS.invoke.AUDIO_START_LISTENING]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.AUDIO_START_LISTENING)
+    },
+
+    /**
+     * Stop listening to audio input
+     */
+    stopListening: async (): Promise<InvokeMap[typeof CHANNELS.invoke.AUDIO_STOP_LISTENING]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.AUDIO_STOP_LISTENING)
+    },
+
+    /**
+     * Subscribe to audio events
+     * Returns an unsubscribe function for cleanup
+     *
+     * Usage:
+     *   const unsubscribe = window.api.audio.on(CHANNELS.events.AUDIO_STATE, (state) => {...})
+     *   // Later: unsubscribe()
+     */
+    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe {
+      // Type-safe event listener with automatic cleanup
+      const handler = (_event: Electron.IpcRendererEvent, payload: EventMap[K]): void => {
+        callback(payload)
+      }
+
+      ipcRenderer.on(event, handler)
+
+      // Return unsubscribe function
+      return () => {
+        ipcRenderer.removeListener(event, handler)
+      }
+    }
   }
 }
 
