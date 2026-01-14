@@ -10,10 +10,15 @@ import { BASE_URL, MODEL, createSessionUpdate } from '../lib/realtimeConfig'
 import type {
   RealtimeEvent,
   RealtimeMessage,
-  TranscriptionDeltaEvent,
-  TranscriptionCompletedEvent,
   ResponseDoneEvent
 } from '@shared/types/realtime'
+import { getRealtimeClientSecret } from '../realtime/session'
+import {
+  closeRealtimeWebRtcConnection,
+  createRealtimeWebRtcConnection,
+  type RealtimeWebRtcConnection
+} from '../realtime/webrtc'
+import { attachRealtimeDataChannelHandlers } from '../realtime/events'
 
 interface UseRealtimeAgentOptions {
   onUserTranscript?: (text: string, messageId: string) => void
@@ -56,11 +61,10 @@ export function useRealtimeAgent(
   const [messages, setMessages] = useState<RealtimeMessage[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  const dataChannelRef = useRef<RTCDataChannel | null>(null)
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null)
-  const audioElementRef = useRef<HTMLAudioElement | null>(null)
+  const connRef = useRef<RealtimeWebRtcConnection | null>(null)
   const audioStreamRef = useRef<MediaStream | null>(null)
   const tracksRef = useRef<RTCRtpSender[]>([])
+  const dcCleanupRef = useRef<(() => void) | null>(null)
 
   // Synchronization state management
   const currentMessageIdRef = useRef<string | null>(null)
@@ -78,9 +82,10 @@ export function useRealtimeAgent(
 
   const sendClientEvent = useCallback(
     (event: RealtimeEvent) => {
-      if (dataChannelRef.current && dataChannelRef.current.readyState === 'open') {
+      const dc = connRef.current?.dc
+      if (dc && dc.readyState === 'open') {
         event.event_id = event.event_id || crypto.randomUUID()
-        dataChannelRef.current.send(JSON.stringify(event))
+        dc.send(JSON.stringify(event))
       } else {
         console.error('[Realtime] Failed to send event - data channel not open', event)
       }
@@ -97,75 +102,121 @@ export function useRealtimeAgent(
 
       setError(null)
 
-      // Get ephemeral token via IPC
-      const session = await window.api.realtime.getSession({})
-      const sessionToken = session.clientSecret
-
-      if (!sessionToken) {
-        throw new Error('Failed to get session token')
-      }
+      const sessionToken = await getRealtimeClientSecret()
 
       console.log('[Realtime] Session token obtained, creating WebRTC connection')
-
-      // Create RTCPeerConnection
-      const pc = new RTCPeerConnection()
-
-      // Setup audio element for playback
-      if (!audioElementRef.current) {
-        audioElementRef.current = document.createElement('audio')
-        audioElementRef.current.autoplay = true
-      }
-
-      pc.ontrack = (e) => {
-        if (audioElementRef.current) {
-          audioElementRef.current.srcObject = e.streams[0]
-        }
-      }
 
       // Get user media stream
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true
       })
 
-      // Add tracks to peer connection
-      stream.getTracks().forEach((track) => {
-        const sender = pc.addTrack(track, stream)
-        if (sender) {
-          tracksRef.current.push(sender)
-        }
-      })
-
       audioStreamRef.current = stream
-
-      // Create data channel for events
-      const dc = pc.createDataChannel('oai-events')
-      dataChannelRef.current = dc
-
-      // Setup SDP exchange
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-
-      const sdpResponse = await fetch(`${BASE_URL}?model=${MODEL}`, {
-        method: 'POST',
-        body: offer.sdp,
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-          'Content-Type': 'application/sdp'
-        }
+      const conn = await createRealtimeWebRtcConnection({
+        sessionToken,
+        baseUrl: BASE_URL,
+        model: MODEL,
+        initialStream: stream
       })
 
-      if (!sdpResponse.ok) {
-        throw new Error(`SDP exchange failed: ${sdpResponse.status} ${sdpResponse.statusText}`)
-      }
-
-      const answer: RTCSessionDescriptionInit = {
-        type: 'answer',
-        sdp: await sdpResponse.text()
-      }
-      await pc.setRemoteDescription(answer)
-
-      peerConnectionRef.current = pc
+      connRef.current = conn
+      tracksRef.current = conn.senders
       setIsSessionStarted(true)
+
+      // Attach data channel listeners immediately (no ref/useEffect timing issues)
+      dcCleanupRef.current?.()
+      dcCleanupRef.current = attachRealtimeDataChannelHandlers(conn.dc, {
+        onOpen: () => {
+          console.log('[Realtime] Data channel opened')
+          setIsSessionActive(true)
+          setIsListening(true)
+
+          const sessionUpdate = createSessionUpdate()
+          sendClientEvent(sessionUpdate)
+          console.log('[Realtime] Session update sent:', sessionUpdate)
+        },
+        onBotTranscriptDelta: (delta) => {
+          if (!currentMessageIdRef.current) currentMessageIdRef.current = crypto.randomUUID()
+          const messageId = currentMessageIdRef.current
+          onBotTranscript?.(delta, messageId)
+
+          setMessages((prev) => {
+            const deltaIndex = prev.findIndex((msg) => msg.id === messageId)
+            if (deltaIndex !== -1) {
+              const updated = [...prev]
+              updated[deltaIndex] = {
+                ...updated[deltaIndex],
+                bot: (updated[deltaIndex].bot || '') + delta
+              }
+              return updated
+            }
+            return [{ id: messageId, bot: delta }, ...prev]
+          })
+        },
+        onUserTranscriptDelta: (delta) => {
+          if (!currentMessageIdRef.current) currentMessageIdRef.current = crypto.randomUUID()
+          const messageId = currentMessageIdRef.current
+          onUserTranscript?.(delta, messageId)
+
+          setMessages((prev) => {
+            const deltaIndex = prev.findIndex((msg) => msg.id === messageId)
+            if (deltaIndex !== -1) {
+              const updated = [...prev]
+              updated[deltaIndex] = {
+                ...updated[deltaIndex],
+                user: (updated[deltaIndex].user || '') + delta
+              }
+              return updated
+            }
+            return [{ id: messageId, user: delta }, ...prev]
+          })
+        },
+        onUserTranscriptCompleted: (text) => {
+          if (!currentMessageIdRef.current) return
+          const messageId = currentMessageIdRef.current
+          onTranscriptComplete?.(text, true, messageId)
+
+          setMessages((prev) => {
+            const idx = prev.findIndex((msg) => msg.id === messageId)
+            if (idx === -1) return prev
+            const updated = [...prev]
+            updated[idx] = { ...updated[idx], user: text }
+            return updated
+          })
+
+          completionStateRef.current.transcriptionDone = true
+          if (completionStateRef.current.responseDone) resetMessageCycle()
+        },
+        onResponseDone: (doneEvent) => {
+          const output = doneEvent.response?.output?.[0]
+          if (output && output.type === 'message') {
+            const finalTranscript = output.content?.[0]?.transcript
+            if (finalTranscript && currentMessageIdRef.current) {
+              const messageId = currentMessageIdRef.current
+              onBotTranscript?.(finalTranscript, messageId)
+              onTranscriptComplete?.(finalTranscript, false, messageId)
+
+              setMessages((prev) => {
+                const idx = prev.findIndex((msg) => msg.id === messageId)
+                if (idx === -1) return prev
+                const updated = [...prev]
+                updated[idx] = {
+                  ...updated[idx],
+                  id: output.id || messageId,
+                  bot: finalTranscript
+                }
+                return updated
+              })
+            }
+          }
+
+          completionStateRef.current.responseDone = true
+          if (completionStateRef.current.transcriptionDone) resetMessageCycle()
+        },
+        onParseError: (err) => {
+          console.error('[Realtime] Error handling message:', err)
+        }
+      })
 
       console.log('[Realtime] WebRTC connection established')
     } catch (err) {
@@ -180,17 +231,11 @@ export function useRealtimeAgent(
   const stopSession = useCallback(() => {
     console.log('[Realtime] Stopping session')
 
-    // Close data channel
-    if (dataChannelRef.current) {
-      dataChannelRef.current.close()
-      dataChannelRef.current = null
-    }
+    dcCleanupRef.current?.()
+    dcCleanupRef.current = null
 
-    // Close peer connection
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close()
-      peerConnectionRef.current = null
-    }
+    closeRealtimeWebRtcConnection(connRef.current)
+    connRef.current = null
 
     // Stop audio tracks
     if (audioStreamRef.current) {
@@ -208,7 +253,7 @@ export function useRealtimeAgent(
 
   const startRecording = useCallback(async () => {
     try {
-      if (!peerConnectionRef.current) {
+      if (!connRef.current) {
         throw new Error('Session not started')
       }
 
@@ -223,10 +268,10 @@ export function useRealtimeAgent(
         tracksRef.current.forEach((sender) => {
           sender.replaceTrack(micTrack)
         })
-      } else if (peerConnectionRef.current) {
+      } else if (connRef.current) {
         // Fallback: add tracks if no senders exist
         newStream.getTracks().forEach((track) => {
-          const sender = peerConnectionRef.current?.addTrack(track, newStream)
+          const sender = connRef.current?.pc.addTrack(track, newStream)
           if (sender) {
             tracksRef.current.push(sender)
           }
@@ -272,171 +317,12 @@ export function useRealtimeAgent(
 
   // Handle data channel messages
   useEffect(() => {
-    const dc = dataChannelRef.current
-    if (!dc) return
-
-    const handleMessage = (e: MessageEvent) => {
-      try {
-        const event = JSON.parse(e.data) as
-          | TranscriptionDeltaEvent
-          | TranscriptionCompletedEvent
-          | ResponseDoneEvent
-          | { type: string; [key: string]: unknown }
-
-        // Generate message ID for new conversations
-        if (
-          (event.type === 'response.audio_transcript.delta' ||
-            event.type === 'conversation.item.input_audio_transcription.delta') &&
-          !currentMessageIdRef.current
-        ) {
-          currentMessageIdRef.current = crypto.randomUUID()
-        }
-
-        switch (event.type) {
-          case 'response.audio_transcript.delta': {
-            const deltaEvent = event as TranscriptionDeltaEvent
-            if (deltaEvent.delta && currentMessageIdRef.current) {
-              const messageId = currentMessageIdRef.current
-              onBotTranscript?.(deltaEvent.delta, messageId)
-
-              setMessages((prev) => {
-                const deltaIndex = prev.findIndex((msg) => msg.id === messageId)
-                if (deltaIndex !== -1) {
-                  const updated = [...prev]
-                  updated[deltaIndex] = {
-                    ...updated[deltaIndex],
-                    bot: (updated[deltaIndex].bot || '') + deltaEvent.delta
-                  }
-                  return updated
-                }
-                return [
-                  {
-                    id: messageId,
-                    bot: deltaEvent.delta
-                  },
-                  ...prev
-                ]
-              })
-            }
-            break
-          }
-
-          case 'conversation.item.input_audio_transcription.delta': {
-            const deltaEvent = event as TranscriptionDeltaEvent
-            if (deltaEvent.delta && currentMessageIdRef.current) {
-              const messageId = currentMessageIdRef.current
-              onUserTranscript?.(deltaEvent.delta, messageId)
-
-              setMessages((prev) => {
-                const deltaIndex = prev.findIndex((msg) => msg.id === messageId)
-                if (deltaIndex !== -1) {
-                  const updated = [...prev]
-                  updated[deltaIndex] = {
-                    ...updated[deltaIndex],
-                    user: (updated[deltaIndex].user || '') + deltaEvent.delta
-                  }
-                  return updated
-                }
-                return [
-                  {
-                    id: messageId,
-                    user: deltaEvent.delta
-                  },
-                  ...prev
-                ]
-              })
-            }
-            break
-          }
-
-          case 'conversation.item.input_audio_transcription.completed': {
-            const completedEvent = event as TranscriptionCompletedEvent
-            if (completedEvent.transcript && currentMessageIdRef.current) {
-              const messageId = currentMessageIdRef.current
-              onTranscriptComplete?.(completedEvent.transcript, true, messageId)
-
-              setMessages((prev) => {
-                const deltaIndex = prev.findIndex((msg) => msg.id === messageId)
-                if (deltaIndex !== -1) {
-                  const updated = [...prev]
-                  updated[deltaIndex] = {
-                    ...updated[deltaIndex],
-                    user: completedEvent.transcript
-                  }
-                  return updated
-                }
-                return prev
-              })
-
-              completionStateRef.current.transcriptionDone = true
-              if (completionStateRef.current.responseDone) {
-                resetMessageCycle()
-              }
-            }
-            break
-          }
-
-          case 'response.done': {
-            const doneEvent = event as ResponseDoneEvent
-            const output = doneEvent.response?.output?.[0]
-            if (output && output.type === 'message') {
-              const finalTranscript = output.content?.[0]?.transcript
-              if (finalTranscript && currentMessageIdRef.current) {
-                const messageId = currentMessageIdRef.current
-                onBotTranscript?.(finalTranscript, messageId)
-                onTranscriptComplete?.(finalTranscript, false, messageId)
-
-                setMessages((prev) => {
-                  const deltaIndex = prev.findIndex((msg) => msg.id === messageId)
-                  if (deltaIndex !== -1) {
-                    const updated = [...prev]
-                    updated[deltaIndex] = {
-                      ...updated[deltaIndex],
-                      id: output.id || messageId,
-                      bot: finalTranscript
-                    }
-                    return updated
-                  }
-                  return prev
-                })
-              }
-            }
-
-            completionStateRef.current.responseDone = true
-            if (completionStateRef.current.transcriptionDone) {
-              resetMessageCycle()
-            }
-            break
-          }
-
-          default:
-            // Ignore other event types
-            break
-        }
-      } catch (err) {
-        console.error('[Realtime] Error handling message:', err)
-      }
-    }
-
-    const handleOpen = () => {
-      console.log('[Realtime] Data channel opened')
-      setIsSessionActive(true)
-      setIsListening(true)
-
-      // Send session update with transcription config
-      const sessionUpdate = createSessionUpdate()
-      sendClientEvent(sessionUpdate)
-      console.log('[Realtime] Session update sent:', sessionUpdate)
-    }
-
-    dc.addEventListener('message', handleMessage)
-    dc.addEventListener('open', handleOpen)
-
     return () => {
-      dc.removeEventListener('message', handleMessage)
-      dc.removeEventListener('open', handleOpen)
+      // Ensure listeners don't leak if component unmounts mid-session.
+      dcCleanupRef.current?.()
+      dcCleanupRef.current = null
     }
-  }, [sendClientEvent, onUserTranscript, onBotTranscript, onTranscriptComplete, resetMessageCycle])
+  }, [])
 
   return {
     isSessionStarted,
