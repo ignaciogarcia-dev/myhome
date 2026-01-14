@@ -372,7 +372,6 @@ export default function AssistantScreen(): React.JSX.Element {
     }
   }
 
-
   /**
    * Stop recording and generate mock transcript
    */
@@ -487,9 +486,7 @@ export default function AssistantScreen(): React.JSX.Element {
           <button onClick={handleTapButton} style={{ marginRight: '10px', padding: '10px 20px' }}>
             {getButtonLabel()}
           </button>
-          {isRecording && (
-            <span style={{ color: '#4caf50', fontWeight: 'bold' }}>Recording…</span>
-          )}
+          {isRecording && <span style={{ color: '#4caf50', fontWeight: 'bold' }}>Recording…</span>}
         </div>
         {lastTranscript && (
           <div style={{ marginBottom: '10px', fontStyle: 'italic', color: '#666' }}>
