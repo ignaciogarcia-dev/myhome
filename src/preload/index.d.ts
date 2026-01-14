@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { CHANNELS, type InvokeMap, type EventMap } from '../shared'
+import { CHANNELS, type InvokeMap } from '../shared'
 
 /**
  * Type-safe unsubscribe function returned from event listeners
