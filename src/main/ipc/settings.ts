@@ -6,7 +6,7 @@
  */
 
 import { ipcMain } from 'electron'
-import { CHANNELS, type InvokeMap, DEFAULT_SETTINGS, type Settings, type PartialSettings } from '../../shared'
+import { CHANNELS, type InvokeMap, DEFAULT_SETTINGS, type Settings } from '../../shared'
 
 // Mock in-memory settings store
 // In production, this would be persisted to disk
