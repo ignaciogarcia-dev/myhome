@@ -28,11 +28,7 @@ export default function SystemScreen(): React.JSX.Element {
         {loading ? 'Pinging...' : 'Ping'}
       </button>
 
-      {error && (
-        <div style={{ color: 'red', marginBottom: '10px' }}>
-          Error: {error}
-        </div>
-      )}
+      {error && <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>}
 
       {result && (
         <div>
