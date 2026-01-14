@@ -5,6 +5,8 @@
  * Based on realtime-voice-agent implementation
  */
 
+import type { SessionUpdateEvent } from '@shared/types/realtime'
+
 export const MODEL = 'gpt-4o-mini-realtime-preview'
 export const BASE_URL = 'https://api.openai.com/v1/realtime'
 
@@ -15,8 +17,8 @@ You are a helpful AI assistant. Respond naturally and conversationally.
 /**
  * Create session update configuration
  */
-export function createSessionUpdate() {
-  return {
+export function createSessionUpdate(): SessionUpdateEvent {
+  const evt: SessionUpdateEvent = {
     type: 'session.update' as const,
     session: {
       instructions: INSTRUCTIONS,
@@ -26,4 +28,5 @@ export function createSessionUpdate() {
       max_response_output_tokens: 300
     }
   }
+  return evt
 }
