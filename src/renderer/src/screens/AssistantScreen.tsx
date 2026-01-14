@@ -299,6 +299,7 @@ export default function AssistantScreen(): React.JSX.Element {
         recorder.start()
         setIsRecording(true)
         recordingStartTimeRef.current = Date.now()
+        console.log('Recording started at', recordingStartTimeRef.current)
         setRecordingDuration(0)
 
         // Start duration interval
@@ -509,13 +510,31 @@ export default function AssistantScreen(): React.JSX.Element {
     // Wait for stop event to fire
     await stopped
 
+    // Calculate duration BEFORE clearing any refs
+    // Capture values now to avoid race conditions with cleanup effects
+    const startTime = recordingStartTimeRef.current
+    const durationState = recordingDuration
+
+    // Try recordingStartTimeRef first (most accurate), fallback to recordingDuration state
+    let durationMs = 0
+    if (startTime) {
+      durationMs = Math.max(0, Math.round(Date.now() - startTime))
+    } else if (durationState > 0) {
+      durationMs = Math.round(durationState * 1000)
+    } else {
+      // Last resort: estimate from chunks or use a minimum
+      // Each chunk is typically ~100-200ms of audio
+      durationMs = Math.max(100, recordedChunksRef.current.length * 150) // Rough estimate
+    }
+
     // Debug logs (temporarily)
+    console.log('=== STT Debug ===')
     console.log('chunks', recordedChunksRef.current.length)
     console.log('mime', recordingMimeTypeRef.current)
-    const durationMs = recordingStartTimeRef.current
-      ? Math.max(0, Math.round(Date.now() - recordingStartTimeRef.current))
-      : Math.round(recordingDuration * 1000)
-    console.log('durationMs', durationMs)
+    console.log('recordingStartTimeRef', startTime)
+    console.log('recordingDuration state', durationState)
+    console.log('durationMs calculated', durationMs)
+    console.log('=================')
 
     // IMPORTANT: only check chunks after recorder has fully stopped
     if (recordedChunksRef.current.length === 0) {
