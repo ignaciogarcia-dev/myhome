@@ -17,6 +17,13 @@ export const CHANNELS = {
   }
 } as const
 
-// Type helpers for channel names
-export type InvokeChannel = (typeof CHANNELS.invoke)[keyof typeof CHANNELS.invoke]
-export type EventChannel = (typeof CHANNELS.events)[keyof typeof CHANNELS.events]
+export const INVOKE = CHANNELS.invoke
+export const EVENTS = CHANNELS.events
+
+// Key helpers (useful for mapped types)
+export type InvokeKey = keyof typeof CHANNELS.invoke
+export type EventKey = keyof typeof CHANNELS.events
+
+// Value helpers (channel string literals)
+export type InvokeChannel = (typeof CHANNELS.invoke)[InvokeKey]
+export type EventChannel = (typeof CHANNELS.events)[EventKey]
