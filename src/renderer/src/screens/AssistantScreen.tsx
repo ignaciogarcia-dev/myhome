@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { CHANNELS } from '@shared/ipc/channels'
 import type { AssistantStatus, AssistantState, AssistantToken } from '@shared/types/assistant'
 import type { AudioState, AudioLevel } from '@shared/types/audio'
@@ -15,6 +15,14 @@ export default function AssistantScreen(): React.JSX.Element {
   const [messageId, setMessageId] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
+  const [micError, setMicError] = useState<string | null>(null)
+
+  // Refs for microphone resources (non-UI state)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const animationFrameIdRef = useRef<number | null>(null)
 
   // Subscribe to assistant events
   useEffect(() => {
@@ -64,7 +72,10 @@ export default function AssistantScreen(): React.JSX.Element {
     const unsubscribeLevel = window.api.audio.on(
       CHANNELS.events.AUDIO_LEVEL,
       (level: AudioLevel) => {
-        setAudioLevel(level.level)
+        // Only use IPC levels if real mic is not active
+        if (!analyserRef.current) {
+          setAudioLevel(level.level)
+        }
       }
     )
 
