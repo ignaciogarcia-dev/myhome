@@ -79,7 +79,6 @@ export function registerSttHandlers(): void {
   ipcMain.handle(
     CHANNELS.invoke.STT_TRANSCRIBE,
     async (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _event,
       request: InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['req']
     ): Promise<InvokeMap[typeof CHANNELS.invoke.STT_TRANSCRIBE]['res']> => {
