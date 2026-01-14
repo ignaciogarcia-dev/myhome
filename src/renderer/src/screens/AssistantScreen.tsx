@@ -100,10 +100,7 @@ export default function AssistantScreen(): React.JSX.Element {
         })
 
         // Append tokens to finalTextRef only when matching activeMessageIdRef
-        if (
-          activeMessageIdRef.current &&
-          token.messageId === activeMessageIdRef.current
-        ) {
+        if (activeMessageIdRef.current && token.messageId === activeMessageIdRef.current) {
           finalTextRef.current += token.token
         }
       }
