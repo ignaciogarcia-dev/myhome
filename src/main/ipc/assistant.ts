@@ -20,6 +20,11 @@ let currentState: AssistantState = {
   updatedAt: Date.now()
 }
 
+// Cancellation-safe state management
+let activeMessageId: string | null = null
+let cancelActive = false
+let tokenTimer: NodeJS.Timeout | null = null
+
 /**
  * Broadcast event to all renderer processes
  */
@@ -59,7 +64,19 @@ async function simulateTokenStream(messageId: string): Promise<void> {
   const mockTokens = ['Hello', '!', ' ', 'How', ' ', 'can', ' ', 'I', ' ', 'help', ' ', 'you', '?']
 
   for (let i = 0; i < mockTokens.length; i++) {
-    await new Promise((resolve) => setTimeout(resolve, 100)) // Simulate network delay
+    // Check for cancellation before each token
+    if (cancelActive || activeMessageId !== messageId) {
+      return
+    }
+
+    await new Promise((resolve) => {
+      tokenTimer = setTimeout(resolve, 100) // Simulate network delay
+    })
+
+    // Check again after delay
+    if (cancelActive || activeMessageId !== messageId) {
+      return
+    }
 
     const token: AssistantToken = {
       messageId,
