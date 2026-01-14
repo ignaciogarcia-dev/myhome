@@ -78,11 +78,7 @@ export default function AssistantScreen(): React.JSX.Element {
     <div style={{ padding: '20px' }}>
       <h2>Assistant</h2>
 
-      {error && (
-        <div style={{ color: 'red', marginBottom: '10px' }}>
-          Error: {error}
-        </div>
-      )}
+      {error && <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>}
 
       <div style={{ marginBottom: '20px' }}>
         <input
