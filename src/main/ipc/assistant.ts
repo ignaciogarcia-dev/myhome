@@ -79,10 +79,12 @@ export function registerAssistantHandlers(): void {
   // Handle send message request
   ipcMain.handle(
     CHANNELS.invoke.ASSISTANT_SEND_MESSAGE,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (
       _event,
       _request: InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['req']
     ): Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_SEND_MESSAGE]['res']> => {
+      // Note: _request.text is available but unused in mock implementation
       const messageId = generateMessageId()
       const createdAt = Date.now()
 
