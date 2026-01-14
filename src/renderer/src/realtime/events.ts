@@ -23,9 +23,9 @@ export function attachRealtimeDataChannelHandlers(
   dc: RTCDataChannel,
   handlers: RealtimeEventHandlers
 ): () => void {
-  const handleOpen = () => handlers.onOpen?.()
+  const handleOpen = (): void => handlers.onOpen?.()
 
-  const handleMessage = (e: MessageEvent) => {
+  const handleMessage = (e: MessageEvent): void => {
     try {
       const event = JSON.parse(e.data) as RealtimeDataChannelEvent
       handlers.onMessage?.(event)
