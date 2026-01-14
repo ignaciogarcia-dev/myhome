@@ -1,6 +1,6 @@
 /**
  * Shared Types and Contracts
- * 
+ *
  * Central export point for all shared types, contracts, and constants
  * used across main process, preload, and renderer.
  */
