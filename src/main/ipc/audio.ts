@@ -6,7 +6,13 @@
  */
 
 import { ipcMain, BrowserWindow } from 'electron'
-import { CHANNELS, type InvokeMap, type EventMap, type AudioState, type AudioLevel } from '../../shared'
+import {
+  CHANNELS,
+  type InvokeMap,
+  type EventMap,
+  type AudioState,
+  type AudioLevel
+} from '../../shared'
 
 // Current audio state
 let isListening = false
