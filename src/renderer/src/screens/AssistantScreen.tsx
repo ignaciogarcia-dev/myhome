@@ -52,6 +52,40 @@ export default function AssistantScreen(): React.JSX.Element {
     }
   }, []) // Only subscribe once on mount
 
+  // Subscribe to audio events
+  useEffect(() => {
+    const unsubscribeState = window.api.audio.on(
+      CHANNELS.events.AUDIO_STATE,
+      (state: AudioState) => {
+        setIsListening(state.isListening)
+      }
+    )
+
+    const unsubscribeLevel = window.api.audio.on(
+      CHANNELS.events.AUDIO_LEVEL,
+      (level: AudioLevel) => {
+        setAudioLevel(level.level)
+      }
+    )
+
+    // Cleanup on unmount
+    return () => {
+      unsubscribeState()
+      unsubscribeLevel()
+    }
+  }, [])
+
+  // Ensure stopListening is called on unmount if currently listening
+  useEffect(() => {
+    return () => {
+      if (isListening) {
+        window.api.audio.stopListening().catch(() => {
+          // Ignore errors during cleanup
+        })
+      }
+    }
+  }, [isListening])
+
   const handleSend = async (): Promise<void> => {
     if (!message.trim()) return
 
