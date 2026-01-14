@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { CHANNELS } from '@shared/ipc/channels'
 import type { AssistantStatus, AssistantState, AssistantToken } from '@shared/types/assistant'
+import type { AudioState, AudioLevel } from '@shared/types/audio'
 
 /**
  * Assistant Screen - Tests assistant.sendMessage() and event subscriptions
@@ -12,6 +13,8 @@ export default function AssistantScreen(): React.JSX.Element {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [messageId, setMessageId] = useState<string | null>(null)
+  const [isListening, setIsListening] = useState(false)
+  const [audioLevel, setAudioLevel] = useState(0)
 
   // Subscribe to assistant events
   useEffect(() => {
