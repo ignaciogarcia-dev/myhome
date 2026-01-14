@@ -7,11 +7,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { BASE_URL, MODEL, createSessionUpdate } from '../lib/realtimeConfig'
-import type {
-  RealtimeEvent,
-  RealtimeMessage,
-  ResponseDoneEvent
-} from '@shared/types/realtime'
+import type { RealtimeEvent, RealtimeMessage } from '@shared/types/realtime'
 import { getRealtimeClientSecret } from '../realtime/session'
 import {
   closeRealtimeWebRtcConnection,
