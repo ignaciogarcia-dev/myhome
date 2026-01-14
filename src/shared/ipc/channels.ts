@@ -9,11 +9,15 @@ export const CHANNELS = {
     SYSTEM_PING: 'system:ping',
     SETTINGS_GET: 'settings:get',
     SETTINGS_SET: 'settings:set',
-    ASSISTANT_SEND_MESSAGE: 'assistant:send-message'
+    ASSISTANT_SEND_MESSAGE: 'assistant:send-message',
+    AUDIO_START_LISTENING: 'audio:start-listening',
+    AUDIO_STOP_LISTENING: 'audio:stop-listening'
   },
   events: {
     ASSISTANT_STATE: 'assistant:state',
-    ASSISTANT_TOKEN: 'assistant:token'
+    ASSISTANT_TOKEN: 'assistant:token',
+    AUDIO_STATE: 'audio:state',
+    AUDIO_LEVEL: 'audio:level'
   }
 } as const
 
