@@ -50,6 +50,13 @@ const api = {
     },
 
     /**
+     * Cancel the current assistant operation
+     */
+    cancel: async (): Promise<InvokeMap[typeof CHANNELS.invoke.ASSISTANT_CANCEL]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.ASSISTANT_CANCEL)
+    },
+
+    /**
      * Subscribe to assistant events
      * Returns an unsubscribe function for cleanup
      *
