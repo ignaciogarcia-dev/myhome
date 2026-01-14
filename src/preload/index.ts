@@ -52,17 +52,14 @@ const api = {
     /**
      * Subscribe to assistant events
      * Returns an unsubscribe function for cleanup
-     * 
+     *
      * Usage:
      *   const unsubscribe = window.api.assistant.on(CHANNELS.events.ASSISTANT_STATE, (state) => {...})
      *   // Later: unsubscribe()
      */
-    on<K extends keyof EventMap>(
-      event: K,
-      callback: (payload: EventMap[K]) => void
-    ): Unsubscribe {
+    on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): Unsubscribe {
       // Type-safe event listener with automatic cleanup
-      const handler = (_event: Electron.IpcRendererEvent, payload: EventMap[K]) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: EventMap[K]): void => {
         callback(payload)
       }
 
