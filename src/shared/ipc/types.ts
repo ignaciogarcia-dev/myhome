@@ -1,6 +1,6 @@
 /**
  * IPC Type Mappings
- * 
+ *
  * Defines request/response types for each IPC channel using a mapping pattern
  * for type safety and consistency.
  */
