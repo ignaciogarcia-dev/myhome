@@ -70,7 +70,7 @@ function generateFallbackTranscript(durationMs: number): string {
  * Generates transcripts based on duration (mock-first implementation)
  */
 class MockSttProvider implements SttProvider {
-  id: 'mock' = 'mock'
+  id = 'mock' as const
 
   async transcribe(input: {
     audioBase64: string
@@ -96,7 +96,7 @@ class MockSttProvider implements SttProvider {
  * Uses OpenAI audio transcription API
  */
 class OpenAISttProvider implements SttProvider {
-  id: 'openai' = 'openai'
+  id = 'openai' as const
 
   constructor(private getApiKey: () => Promise<string | null>) {}
 
