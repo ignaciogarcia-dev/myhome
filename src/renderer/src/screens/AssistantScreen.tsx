@@ -588,13 +588,17 @@ export default function AssistantScreen(): React.JSX.Element {
       }
 
       if (status === 'thinking' || status === 'responding') {
-        // Interrupt assistant
-        await window.api.assistant.cancel()
+        // Interrupt assistant and stop TTS
+        await Promise.allSettled([
+          window.api.assistant.cancel(),
+          window.api.tts.stop()
+        ])
         setTokens([]) // Clear tokens
         return
       }
 
-      // Idle → start listening (recording will start when stream is available)
+      // Idle → start listening (stop TTS first to avoid overlap)
+      await window.api.tts.stop()
       await window.api.audio.startListening()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to handle tap')
