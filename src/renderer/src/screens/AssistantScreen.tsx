@@ -589,10 +589,7 @@ export default function AssistantScreen(): React.JSX.Element {
 
       if (status === 'thinking' || status === 'responding') {
         // Interrupt assistant and stop TTS
-        await Promise.allSettled([
-          window.api.assistant.cancel(),
-          window.api.tts.stop()
-        ])
+        await Promise.allSettled([window.api.assistant.cancel(), window.api.tts.stop()])
         setTokens([]) // Clear tokens
         return
       }
