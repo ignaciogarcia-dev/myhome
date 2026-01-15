@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import SystemScreen from './screens/SystemScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import AssistantScreen from './screens/AssistantScreen'
+import WeatherScreen from './screens/WeatherScreen'
 
-type Tab = 'system' | 'settings' | 'assistant'
+type Tab = 'system' | 'settings' | 'assistant' | 'weather'
 
 export default function App(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<Tab>('system')
@@ -16,6 +17,8 @@ export default function App(): React.JSX.Element {
         return <SettingsScreen />
       case 'assistant':
         return <AssistantScreen />
+      case 'weather':
+        return <WeatherScreen />
       default:
         return <SystemScreen />
     }
@@ -62,6 +65,17 @@ export default function App(): React.JSX.Element {
           }}
         >
           Assistant
+        </button>
+        <button
+          onClick={() => setActiveTab('weather')}
+          style={{
+            padding: '10px 20px',
+            border: 'none',
+            backgroundColor: activeTab === 'weather' ? '#e0e0e0' : 'transparent',
+            cursor: 'pointer'
+          }}
+        >
+          Weather
         </button>
       </div>
       <div style={{ flex: 1, overflow: 'auto' }}>{renderScreen()}</div>
