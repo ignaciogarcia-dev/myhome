@@ -6,6 +6,7 @@ import { registerSystemHandlers } from './ipc/system'
 import { registerSettingsHandlers } from './ipc/settings'
 import { registerSecretsHandlers } from './ipc/secrets'
 import { registerRealtimeHandlers } from './ipc/realtime'
+import { registerWeatherHandlers } from './ipc/weather'
 
 /**
  * Register all IPC handlers
@@ -16,6 +17,7 @@ function registerIpcHandlers(): void {
   registerSettingsHandlers()
   registerSecretsHandlers()
   registerRealtimeHandlers()
+  registerWeatherHandlers()
 }
 
 function createWindow(): void {
