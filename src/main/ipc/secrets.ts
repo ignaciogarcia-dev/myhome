@@ -12,6 +12,24 @@ import { CHANNELS, type InvokeMap } from '../../shared'
 
 const SECRETS_FILE = 'secrets.json'
 const ENCRYPTED_KEY_NAME = 'openai_api_key'
+const OPENWEATHERMAP_KEY_NAME = 'openweathermap_api_key'
+
+function normalizeOpenWeatherMapKey(input: string): string | null {
+  const trimmed = input.trim()
+  if (!trimmed) {
+    return null
+  }
+
+  const appIdMatch = trimmed.match(/appid=([^&]+)/i)
+  const candidate = appIdMatch ? appIdMatch[1] : trimmed
+  const normalized = candidate.trim()
+
+  if (!/^[0-9a-f]{32}$/i.test(normalized)) {
+    return null
+  }
+
+  return normalized
+}
 
 /**
  * Get path to secrets file
@@ -144,6 +162,101 @@ export async function clearOpenAIKey(): Promise<boolean> {
 }
 
 /**
+ * Get OpenWeatherMap API key
+ */
+export async function getOpenWeatherMapKey(): Promise<string | null> {
+  try {
+    const secrets = await loadSecrets()
+    const stored = secrets[OPENWEATHERMAP_KEY_NAME]
+    if (stored && stored.trim().length > 0) {
+      const normalized = normalizeOpenWeatherMapKey(stored)
+      if (!normalized) {
+        console.warn(
+          'Stored OpenWeatherMap API key is invalid. Please re-enter it in Settings.'
+        )
+      } else {
+        // Log first 4 and last 4 characters for debugging (without exposing full key)
+        if (normalized.length >= 8) {
+          console.log(
+            `Using OpenWeatherMap API key: ${normalized.substring(0, 4)}...${normalized.substring(
+              normalized.length - 4
+            )} (length: ${normalized.length})`
+          )
+        }
+        return normalized
+      }
+    }
+
+    const envKey = process.env.OPENWEATHERMAP_API_KEY
+    if (envKey && envKey.trim().length > 0) {
+      const normalized = normalizeOpenWeatherMapKey(envKey)
+      if (!normalized) {
+        console.warn(
+          'OPENWEATHERMAP_API_KEY is invalid. Expected a 32-character hex key.'
+        )
+      } else {
+        return normalized
+      }
+    }
+
+    return null
+  } catch (err) {
+    console.error('Failed to load OpenWeatherMap key:', err)
+    return null
+  }
+}
+
+/**
+ * Set OpenWeatherMap API key
+ */
+export async function setOpenWeatherMapKey(apiKey: string): Promise<boolean> {
+  try {
+    const normalized = normalizeOpenWeatherMapKey(apiKey)
+    if (!normalized) {
+      console.error(
+        'OpenWeatherMap API key appears to be invalid (expected 32 hex characters)'
+      )
+      return false
+    }
+    const secrets = await loadSecrets()
+    secrets[OPENWEATHERMAP_KEY_NAME] = normalized
+    await saveSecrets(secrets)
+    console.log('OpenWeatherMap API key saved successfully (length:', normalized.length, ')')
+    return true
+  } catch (err) {
+    console.error('Failed to save OpenWeatherMap key:', err)
+    return false
+  }
+}
+
+/**
+ * Check if OpenWeatherMap API key exists
+ */
+export async function hasOpenWeatherMapKey(): Promise<boolean> {
+  try {
+    const key = await getOpenWeatherMapKey()
+    return key !== null && key.length > 0
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Clear OpenWeatherMap API key
+ */
+export async function clearOpenWeatherMapKey(): Promise<boolean> {
+  try {
+    const secrets = await loadSecrets()
+    delete secrets[OPENWEATHERMAP_KEY_NAME]
+    await saveSecrets(secrets)
+    return true
+  } catch (err) {
+    console.error('Failed to clear OpenWeatherMap key:', err)
+    return false
+  }
+}
+
+/**
  * Register secrets IPC handlers
  */
 export function registerSecretsHandlers(): void {
@@ -173,6 +286,40 @@ export function registerSecretsHandlers(): void {
     CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY,
     async (): Promise<InvokeMap[typeof CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY]['res']> => {
       const success = await clearOpenAIKey()
+      return { success }
+    }
+  )
+
+  // Set OpenWeatherMap API key
+  ipcMain.handle(
+    CHANNELS.invoke.SECRETS_SET_OPENWEATHERMAP_KEY,
+    async (
+      _event,
+      request: InvokeMap[typeof CHANNELS.invoke.SECRETS_SET_OPENWEATHERMAP_KEY]['req']
+    ): Promise<InvokeMap[typeof CHANNELS.invoke.SECRETS_SET_OPENWEATHERMAP_KEY]['res']> => {
+      const success = await setOpenWeatherMapKey(request.apiKey)
+      return { success }
+    }
+  )
+
+  // Check if OpenWeatherMap API key exists
+  ipcMain.handle(
+    CHANNELS.invoke.SECRETS_HAS_OPENWEATHERMAP_KEY,
+    async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_HAS_OPENWEATHERMAP_KEY]['res']
+    > => {
+      const hasKey = await hasOpenWeatherMapKey()
+      return { hasKey }
+    }
+  )
+
+  // Clear OpenWeatherMap API key
+  ipcMain.handle(
+    CHANNELS.invoke.SECRETS_CLEAR_OPENWEATHERMAP_KEY,
+    async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_CLEAR_OPENWEATHERMAP_KEY]['res']
+    > => {
+      const success = await clearOpenWeatherMapKey()
       return { success }
     }
   )
