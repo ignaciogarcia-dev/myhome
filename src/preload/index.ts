@@ -60,6 +60,37 @@ const api = {
       InvokeMap[typeof CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY]['res']
     > => {
       return await ipcRenderer.invoke(CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY)
+    },
+
+    /**
+     * Set OpenWeatherMap API key
+     */
+    setOpenWeatherMapKey: async (
+      apiKey: string
+    ): Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_SET_OPENWEATHERMAP_KEY]['res']
+    > => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.SECRETS_SET_OPENWEATHERMAP_KEY, {
+        apiKey
+      })
+    },
+
+    /**
+     * Check if OpenWeatherMap API key exists
+     */
+    hasOpenWeatherMapKey: async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_HAS_OPENWEATHERMAP_KEY]['res']
+    > => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.SECRETS_HAS_OPENWEATHERMAP_KEY)
+    },
+
+    /**
+     * Clear OpenWeatherMap API key
+     */
+    clearOpenWeatherMapKey: async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_CLEAR_OPENWEATHERMAP_KEY]['res']
+    > => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.SECRETS_CLEAR_OPENWEATHERMAP_KEY)
     }
   },
 
@@ -71,6 +102,26 @@ const api = {
       payload: InvokeMap[typeof CHANNELS.invoke.REALTIME_GET_SESSION]['req']
     ): Promise<InvokeMap[typeof CHANNELS.invoke.REALTIME_GET_SESSION]['res']> => {
       return await ipcRenderer.invoke(CHANNELS.invoke.REALTIME_GET_SESSION, payload)
+    }
+  },
+
+  weather: {
+    /**
+     * Geocode city name to coordinates
+     */
+    geocode: async (
+      payload: InvokeMap[typeof CHANNELS.invoke.WEATHER_GEOCODE]['req']
+    ): Promise<InvokeMap[typeof CHANNELS.invoke.WEATHER_GEOCODE]['res']> => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.WEATHER_GEOCODE, payload)
+    },
+
+    /**
+     * Get current weather and forecast
+     */
+    getWeather: async (): Promise<
+      InvokeMap[typeof CHANNELS.invoke.WEATHER_GET_WEATHER]['res']
+    > => {
+      return await ipcRenderer.invoke(CHANNELS.invoke.WEATHER_GET_WEATHER)
     }
   }
 }
