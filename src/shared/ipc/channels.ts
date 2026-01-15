@@ -12,6 +12,11 @@ export const CHANNELS = {
     SECRETS_SET_OPENAI_KEY: 'secrets:set-openai-key',
     SECRETS_HAS_OPENAI_KEY: 'secrets:has-openai-key',
     SECRETS_CLEAR_OPENAI_KEY: 'secrets:clear-openai-key',
+    SECRETS_SET_OPENWEATHERMAP_KEY: 'secrets:set-openweathermap-key',
+    SECRETS_HAS_OPENWEATHERMAP_KEY: 'secrets:has-openweathermap-key',
+    SECRETS_CLEAR_OPENWEATHERMAP_KEY: 'secrets:clear-openweathermap-key',
+    WEATHER_GEOCODE: 'weather:geocode',
+    WEATHER_GET_WEATHER: 'weather:get',
     REALTIME_GET_SESSION: 'realtime:get-session'
   }
 } as const
