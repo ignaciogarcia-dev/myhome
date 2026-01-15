@@ -49,6 +49,41 @@ export interface WindowApi {
      * Clear OpenAI API key
      */
     clearOpenAIKey: () => Promise<InvokeMap[typeof CHANNELS.invoke.SECRETS_CLEAR_OPENAI_KEY]['res']>
+
+    /**
+     * Set OpenWeatherMap API key
+     */
+    setOpenWeatherMapKey: (
+      apiKey: string
+    ) => Promise<InvokeMap[typeof CHANNELS.invoke.SECRETS_SET_OPENWEATHERMAP_KEY]['res']>
+
+    /**
+     * Check if OpenWeatherMap API key exists
+     */
+    hasOpenWeatherMapKey: () => Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_HAS_OPENWEATHERMAP_KEY]['res']
+    >
+
+    /**
+     * Clear OpenWeatherMap API key
+     */
+    clearOpenWeatherMapKey: () => Promise<
+      InvokeMap[typeof CHANNELS.invoke.SECRETS_CLEAR_OPENWEATHERMAP_KEY]['res']
+    >
+  }
+
+  weather: {
+    /**
+     * Geocode city name to coordinates
+     */
+    geocode: (
+      payload: InvokeMap[typeof CHANNELS.invoke.WEATHER_GEOCODE]['req']
+    ) => Promise<InvokeMap[typeof CHANNELS.invoke.WEATHER_GEOCODE]['res']>
+
+    /**
+     * Get current weather and forecast
+     */
+    getWeather: () => Promise<InvokeMap[typeof CHANNELS.invoke.WEATHER_GET_WEATHER]['res']>
   }
 
   realtime: {
