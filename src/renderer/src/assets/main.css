@@ -68,10 +68,148 @@
 
 @import './base.css';
 
+@layer components {
+  .ha-shell {
+    @apply relative flex h-screen flex-col overflow-hidden text-[hsl(var(--foreground))];
+  }
+  .ha-card {
+    @apply rounded-[28px] border border-white/70 bg-white/80 shadow-[0_24px_60px_-45px_rgba(15,23,42,0.5)] backdrop-blur-xl;
+  }
+  .ha-pill {
+    @apply inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-slate-600 shadow-[0_8px_20px_-16px_rgba(15,23,42,0.4)];
+  }
+  .ha-tag {
+    @apply inline-flex items-center rounded-full border border-white/70 bg-white/60 px-3 py-1 text-xs font-semibold text-slate-600;
+  }
+  .ha-label {
+    @apply text-xs uppercase tracking-[0.32em] text-slate-500;
+  }
+  .ha-title {
+    @apply text-2xl font-semibold text-slate-900;
+  }
+  .ha-subtitle {
+    @apply text-sm text-slate-500;
+  }
+  .ha-input {
+    @apply w-full rounded-2xl border border-white/80 bg-white/70 px-4 py-2 text-sm text-slate-800 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.4)] placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+  }
+  .ha-button {
+    @apply inline-flex items-center justify-center rounded-full bg-[hsl(var(--primary))] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_32px_-18px_rgba(14,116,144,0.6)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .ha-button-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-white/80 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 shadow-[0_14px_28px_-20px_rgba(15,23,42,0.4)] transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .ha-divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent;
+  }
+  .ha-aurora {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    opacity: 0.75;
+  }
+  .ha-aurora-blue {
+    top: -140px;
+    left: 10%;
+    height: 360px;
+    width: 360px;
+    background: radial-gradient(circle at 30% 30%, hsl(var(--ha-blue) / 0.35), transparent 65%);
+  }
+  .ha-aurora-green {
+    bottom: -160px;
+    right: 12%;
+    height: 380px;
+    width: 380px;
+    background: radial-gradient(circle at 40% 40%, hsl(var(--ha-green) / 0.28), transparent 70%);
+  }
+  .ha-aurora-sun {
+    top: 30%;
+    right: -160px;
+    height: 320px;
+    width: 320px;
+    background: radial-gradient(circle at 40% 40%, hsl(var(--ha-yellow) / 0.3), transparent 70%);
+  }
+  .ha-orb {
+    height: 190px;
+    width: 190px;
+    border-radius: 9999px;
+    background: radial-gradient(
+      circle at 30% 30%,
+      hsl(var(--ha-blue) / 0.9),
+      hsl(var(--ha-green) / 0.55) 45%,
+      hsl(var(--ha-yellow) / 0.4) 70%,
+      transparent 78%
+    );
+    box-shadow:
+      0 0 60px hsl(var(--ha-blue) / 0.35),
+      inset 0 0 30px hsl(var(--ha-sky) / 0.9);
+  }
+}
+
+@keyframes ha-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(18px);
+  }
+}
+
+@keyframes ha-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+@keyframes ha-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 40px hsl(var(--ha-blue) / 0.25),
+      inset 0 0 20px hsl(var(--ha-sky) / 0.8);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow:
+      0 0 70px hsl(var(--ha-blue) / 0.35),
+      inset 0 0 24px hsl(var(--ha-sky) / 0.95);
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: ha-float 12s ease-in-out infinite;
+  }
+  .animate-float-slow {
+    animation: ha-float 16s ease-in-out infinite;
+  }
+  .animate-float-delay {
+    animation: ha-float 18s ease-in-out infinite 2s;
+  }
+  .animate-fade-up {
+    animation: ha-fade-up 0.6s ease-out both;
+  }
+  .animate-pulse-soft {
+    animation: ha-pulse 3.6s ease-in-out infinite;
+  }
+}
+
 body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, hsl(var(--ha-sky) / 0.7), transparent 45%),
+    radial-gradient(circle at 85% 10%, hsl(var(--ha-peach) / 0.55), transparent 45%),
+    linear-gradient(130deg, hsl(var(--background)) 0%, hsl(var(--ha-mint)) 100%);
+  color: hsl(var(--foreground));
 }
 
 code {
