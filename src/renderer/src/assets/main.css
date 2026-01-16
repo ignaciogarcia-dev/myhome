@@ -70,7 +70,8 @@
 
 @layer components {
   .ha-shell {
-    @apply relative flex h-screen flex-col overflow-hidden text-foreground;
+    @apply relative flex h-screen flex-col overflow-hidden;
+    color: hsl(var(--foreground));
   }
   .ha-card {
     @apply rounded-[28px] border border-white/70 bg-white/80 backdrop-blur-xl;
@@ -97,7 +98,9 @@
     box-shadow: 0 10px 24px -18px rgba(15, 23, 42, 0.4);
   }
   .ha-button {
-    @apply inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
     box-shadow: 0 18px 32px -18px rgba(14, 116, 144, 0.6);
   }
   .ha-button-secondary {
