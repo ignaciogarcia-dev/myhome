@@ -49,7 +49,15 @@ export default function App(): React.JSX.Element {
           <header className="pb-6 pt-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="space-y-2">
-                <p className="ha-label">Home Assistant</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[hsl(var(--ha-blue))]" />
+                    <span className="h-2 w-2 rounded-full bg-[hsl(var(--ha-red))]" />
+                    <span className="h-2 w-2 rounded-full bg-[hsl(var(--ha-yellow))]" />
+                    <span className="h-2 w-2 rounded-full bg-[hsl(var(--ha-green))]" />
+                  </div>
+                  <p className="ha-label">Home Assistant</p>
+                </div>
                 <h1 className="text-3xl font-semibold text-slate-900">
                   Ambient Control Hub
                 </h1>
@@ -66,7 +74,7 @@ export default function App(): React.JSX.Element {
           <Tabs
             value={activeTab}
             onValueChange={(value) => setActiveTab(value as Tab)}
-            className="flex flex-1 flex-col overflow-hidden"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
           >
             <TabsList className="relative grid h-12 w-full grid-cols-4 items-center rounded-full bg-white/60 p-1 shadow-[0_12px_32px_-20px_rgba(15,23,42,0.45)] backdrop-blur-lg">
               <span
@@ -87,7 +95,10 @@ export default function App(): React.JSX.Element {
                 </TabsTrigger>
               ))}
             </TabsList>
-            <div {...swipeHandlers} className="relative mt-6 flex-1 overflow-hidden">
+            <div
+              {...swipeHandlers}
+              className="relative mt-6 flex min-h-0 flex-1 overflow-hidden"
+            >
               <div
                 className="flex h-full w-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
                 style={{ transform: `translateX(-${safeIndex * 100}%)` }}
