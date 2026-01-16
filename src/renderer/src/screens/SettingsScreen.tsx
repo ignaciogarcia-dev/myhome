@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import type { Settings } from '@shared/types/settings'
+import { cn } from '@renderer/lib/utils'
 
 const normalizeOpenWeatherMapKey = (input: string): string | null => {
   const trimmed = input.trim()
@@ -37,6 +38,13 @@ export default function SettingsScreen(): React.JSX.Element {
   const [testingApiKey, setTestingApiKey] = useState<boolean>(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const hasCityQuery = citySearch.trim().length > 0
+  const openaiStatusTone = hasOpenaiKey
+    ? 'bg-emerald-100 text-emerald-700'
+    : 'bg-slate-200 text-slate-500'
+  const weatherStatusTone = hasOpenWeatherMapKey
+    ? 'bg-emerald-100 text-emerald-700'
+    : 'bg-slate-200 text-slate-500'
 
   // Load settings on mount
   useEffect(() => {
@@ -205,189 +213,226 @@ export default function SettingsScreen(): React.JSX.Element {
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Settings</h2>
-
-      {error && <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>}
-
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '5px' }}>
-          Theme:
-          <input
-            type="text"
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            style={{ marginLeft: '10px', padding: '5px' }}
-            placeholder="light, dark, or auto"
-          />
-        </label>
+    <div className="flex h-full flex-col gap-6 overflow-y-auto pb-6">
+      <div className="space-y-2">
+        <p className="ha-label">Preferences</p>
+        <h2 className="ha-title">Settings</h2>
+        <p className="ha-subtitle">Tune your experience, language, and integrations.</p>
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '5px' }}>
-          Language:
-          <input
-            type="text"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            style={{ marginLeft: '10px', padding: '5px' }}
-            placeholder="en, es, etc."
-          />
-        </label>
-      </div>
+      {error && (
+        <div className="ha-card border border-red-200 bg-red-50/80 p-4 text-sm text-red-600">
+          Error: {error}
+        </div>
+      )}
 
-      <div style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
-        <h3 style={{ marginTop: 0 }}>OpenAI API Key</h3>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="ha-card p-6 animate-fade-up">
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-slate-700">General</div>
+            <p className="ha-subtitle">Adjust the local interface defaults.</p>
+          </div>
+          <div className="mt-5 space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="theme-input" className="text-sm font-semibold text-slate-700">
+                Theme
+              </label>
+              <input
+                id="theme-input"
+                type="text"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                className="ha-input"
+                placeholder="light, dark, or auto"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="language-input" className="text-sm font-semibold text-slate-700">
+                Language
+              </label>
+              <input
+                id="language-input"
+                type="text"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="ha-input"
+                placeholder="en, es, etc."
+              />
+            </div>
+          </div>
+        </div>
 
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            API Key:
+        <div
+          className="ha-card p-6 animate-fade-up"
+          style={{ animationDelay: '100ms' }}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-sm font-semibold text-slate-700">OpenAI API Key</div>
+              <p className="ha-subtitle">Secure key for assistant features.</p>
+            </div>
+            <span className={cn('ha-pill', openaiStatusTone)}>
+              {hasOpenaiKey ? 'Configured' : 'Missing'}
+            </span>
+          </div>
+          <div className="mt-5 space-y-2">
+            <label htmlFor="openai-key" className="text-sm font-semibold text-slate-700">
+              API Key
+            </label>
             <input
+              id="openai-key"
               type="password"
               value={openaiKey}
               onChange={(e) => setOpenaiKey(e.target.value)}
-              style={{ marginLeft: '10px', padding: '5px', width: '300px' }}
+              className="ha-input"
               placeholder={hasOpenaiKey ? 'Key already configured' : 'Enter API key'}
             />
-            {hasOpenaiKey && (
-              <span style={{ marginLeft: '10px', color: 'green' }}>Configured ✅</span>
-            )}
-          </label>
+          </div>
           {hasOpenaiKey && (
-            <button
-              onClick={handleClearOpenAIKey}
-              style={{ marginTop: '5px', padding: '5px 10px' }}
-            >
-              Clear API Key
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
-        <h3 style={{ marginTop: 0 }}>Weather Settings</h3>
-
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            OpenWeatherMap API Key:
-            <input
-              type="password"
-              value={openWeatherMapKey}
-              onChange={(e) => setOpenWeatherMapKey(e.target.value)}
-              style={{ marginLeft: '10px', padding: '5px', width: '300px' }}
-              placeholder={
-                hasOpenWeatherMapKey ? 'Key already configured' : 'Enter API key'
-              }
-            />
-            {hasOpenWeatherMapKey && (
-              <span style={{ marginLeft: '10px', color: 'green' }}>Configured ✅</span>
-            )}
-          </label>
-          {hasOpenWeatherMapKey && (
-            <div style={{ marginTop: '5px' }}>
+            <div className="mt-4">
               <button
-                onClick={handleTestApiKey}
-                disabled={testingApiKey}
-                style={{
-                  marginRight: '10px',
-                  padding: '5px 10px',
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: testingApiKey ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {testingApiKey ? 'Testing...' : 'Test API Key'}
-              </button>
-              <button
-                onClick={handleClearOpenWeatherMapKey}
-                style={{ padding: '5px 10px' }}
+                type="button"
+                onClick={handleClearOpenAIKey}
+                className="ha-button-secondary"
               >
                 Clear API Key
               </button>
             </div>
           )}
         </div>
+      </div>
 
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            Search City:
+      <div className="ha-card space-y-6 p-6 animate-fade-up" style={{ animationDelay: '200ms' }}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-slate-700">Weather</div>
+            <p className="ha-subtitle">
+              Configure OpenWeatherMap access and your default location.
+            </p>
+          </div>
+          <span className={cn('ha-pill', weatherStatusTone)}>
+            {hasOpenWeatherMapKey ? 'Configured' : 'Missing'}
+          </span>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+          <div className="space-y-2">
+            <label htmlFor="weather-key" className="text-sm font-semibold text-slate-700">
+              OpenWeatherMap API Key
+            </label>
             <input
+              id="weather-key"
+              type="password"
+              value={openWeatherMapKey}
+              onChange={(e) => setOpenWeatherMapKey(e.target.value)}
+              className="ha-input"
+              placeholder={hasOpenWeatherMapKey ? 'Key already configured' : 'Enter API key'}
+            />
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            {hasOpenWeatherMapKey && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleTestApiKey}
+                  disabled={testingApiKey}
+                  className="ha-button"
+                >
+                  {testingApiKey ? 'Testing...' : 'Test API Key'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearOpenWeatherMapKey}
+                  className="ha-button-secondary"
+                >
+                  Clear API Key
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="ha-divider" />
+
+        <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
+          <div className="space-y-2">
+            <label htmlFor="city-search" className="text-sm font-semibold text-slate-700">
+              Search City
+            </label>
+            <input
+              id="city-search"
               type="text"
               value={citySearch}
               onChange={(e) => setCitySearch(e.target.value)}
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleSearchCity()
                 }
               }}
-              style={{ marginLeft: '10px', padding: '5px', width: '300px' }}
+              className="ha-input"
               placeholder="Enter city name"
             />
+          </div>
+          <div className="flex items-end">
             <button
+              type="button"
               onClick={handleSearchCity}
-              disabled={geocoding || !citySearch.trim()}
-              style={{ marginLeft: '10px', padding: '5px 10px' }}
+              disabled={geocoding || !hasCityQuery}
+              className="ha-button-secondary w-full"
             >
               {geocoding ? 'Searching...' : 'Search'}
             </button>
-          </label>
+          </div>
         </div>
 
         {geocodeResults.length > 0 && (
-          <div style={{ marginTop: '10px' }}>
-            <div style={{ marginBottom: '5px', fontWeight: 'bold' }}>Select location:</div>
-            {geocodeResults.map((result, index) => (
-              <div
-                key={index}
-                onClick={() => handleSelectLocation(result)}
-                style={{
-                  padding: '8px',
-                  marginBottom: '5px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  backgroundColor: '#f9f9f9'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#e9e9e9'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f9f9f9'
-                }}
-              >
-                {result.name}
-                {result.country && `, ${result.country}`}
-              </div>
-            ))}
+          <div className="space-y-2">
+            <div className="text-sm font-semibold text-slate-700">Select location</div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {geocodeResults.map((result, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleSelectLocation(result)}
+                  className="rounded-2xl border border-white/80 bg-white/70 px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.4)] transition hover:bg-white/90"
+                >
+                  {result.name}
+                  {result.country && `, ${result.country}`}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
         {settings?.weatherLocation && (
-          <div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#e8f5e9' }}>
+          <div className="rounded-2xl bg-emerald-50/80 p-4 text-sm text-emerald-700">
             <strong>Current location:</strong> {settings.weatherLocation.name}
             {settings.weatherLocation.country && `, ${settings.weatherLocation.country}`}
           </div>
         )}
       </div>
 
-      <button onClick={handleSave} disabled={loading} style={{ marginBottom: '20px' }}>
-        {loading ? 'Saving...' : 'Save'}
-      </button>
+      <div className="flex flex-wrap items-center gap-4">
+        <button type="button" onClick={handleSave} disabled={loading} className="ha-button">
+          {loading ? 'Saving...' : 'Save'}
+        </button>
+        <span className="text-sm text-slate-500">Changes persist locally.</span>
+      </div>
 
       {settings && (
-        <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc' }}>
-          <h3>Current Settings:</h3>
-          <div>Theme: {settings.theme}</div>
-          <div>Language: {settings.language}</div>
-          <div>Schema Version: {settings.schemaVersion}</div>
-          {settings.weatherLocation && (
-            <div>
-              Weather Location: {settings.weatherLocation.name}
-              {settings.weatherLocation.country && `, ${settings.weatherLocation.country}`}
-            </div>
-          )}
+        <div className="ha-card p-6 text-sm text-slate-600 animate-fade-up">
+          <div className="text-sm font-semibold text-slate-700">Current Settings</div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>Theme: {settings.theme}</div>
+            <div>Language: {settings.language}</div>
+            <div>Schema Version: {settings.schemaVersion}</div>
+            {settings.weatherLocation && (
+              <div>
+                Weather Location: {settings.weatherLocation.name}
+                {settings.weatherLocation.country && `, ${settings.weatherLocation.country}`}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
