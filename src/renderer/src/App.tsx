@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useSwipeable } from 'react-swipeable'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
 import SystemScreen from './screens/SystemScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import AssistantScreen from './screens/AssistantScreen'
@@ -6,79 +8,72 @@ import WeatherScreen from './screens/WeatherScreen'
 
 type Tab = 'system' | 'settings' | 'assistant' | 'weather'
 
+const tabs: Tab[] = ['system', 'settings', 'assistant', 'weather']
+
 export default function App(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<Tab>('system')
 
-  const renderScreen = (): React.JSX.Element => {
-    switch (activeTab) {
-      case 'system':
-        return <SystemScreen />
-      case 'settings':
-        return <SettingsScreen />
-      case 'assistant':
-        return <AssistantScreen />
-      case 'weather':
-        return <WeatherScreen />
-      default:
-        return <SystemScreen />
-    }
+  const getTabIndex = (tab: Tab): number => {
+    return tabs.indexOf(tab)
   }
 
+  const getNextTab = (): Tab | null => {
+    const currentIndex = getTabIndex(activeTab)
+    if (currentIndex < tabs.length - 1) {
+      return tabs[currentIndex + 1]
+    }
+    return null
+  }
+
+  const getPreviousTab = (): Tab | null => {
+    const currentIndex = getTabIndex(activeTab)
+    if (currentIndex > 0) {
+      return tabs[currentIndex - 1]
+    }
+    return null
+  }
+
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      const nextTab = getNextTab()
+      if (nextTab) {
+        setActiveTab(nextTab)
+      }
+    },
+    onSwipedRight: () => {
+      const prevTab = getPreviousTab()
+      if (prevTab) {
+        setActiveTab(prevTab)
+      }
+    },
+    trackMouse: true,
+    preventScrollOnSwipe: true
+  })
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <div
-        style={{
-          display: 'flex',
-          borderBottom: '1px solid #ccc',
-          backgroundColor: '#f5f5f5'
-        }}
-      >
-        <button
-          onClick={() => setActiveTab('system')}
-          style={{
-            padding: '10px 20px',
-            border: 'none',
-            backgroundColor: activeTab === 'system' ? '#e0e0e0' : 'transparent',
-            cursor: 'pointer'
-          }}
-        >
-          System
-        </button>
-        <button
-          onClick={() => setActiveTab('settings')}
-          style={{
-            padding: '10px 20px',
-            border: 'none',
-            backgroundColor: activeTab === 'settings' ? '#e0e0e0' : 'transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Settings
-        </button>
-        <button
-          onClick={() => setActiveTab('assistant')}
-          style={{
-            padding: '10px 20px',
-            border: 'none',
-            backgroundColor: activeTab === 'assistant' ? '#e0e0e0' : 'transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Assistant
-        </button>
-        <button
-          onClick={() => setActiveTab('weather')}
-          style={{
-            padding: '10px 20px',
-            border: 'none',
-            backgroundColor: activeTab === 'weather' ? '#e0e0e0' : 'transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Weather
-        </button>
-      </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>{renderScreen()}</div>
+    <div className="flex flex-col h-screen">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Tab)}>
+        <TabsList className="w-full justify-start rounded-none border-b">
+          <TabsTrigger value="system">System</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="assistant">Assistant</TabsTrigger>
+          <TabsTrigger value="weather">Weather</TabsTrigger>
+        </TabsList>
+        <div {...swipeHandlers} className="flex-1 overflow-auto">
+          <TabsContent value="system" className="m-0 h-full">
+            <SystemScreen />
+          </TabsContent>
+          <TabsContent value="settings" className="m-0 h-full">
+            <SettingsScreen />
+          </TabsContent>
+          <TabsContent value="assistant" className="m-0 h-full">
+            <AssistantScreen />
+          </TabsContent>
+          <TabsContent value="weather" className="m-0 h-full">
+            <WeatherScreen />
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   )
 }
