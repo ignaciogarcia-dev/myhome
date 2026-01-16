@@ -68,7 +68,7 @@ export default function App(): React.JSX.Element {
             onValueChange={(value) => setActiveTab(value as Tab)}
             className="flex flex-1 flex-col overflow-hidden"
           >
-            <TabsList className="relative grid w-full grid-cols-4 rounded-full bg-white/60 p-1 shadow-[0_12px_32px_-20px_rgba(15,23,42,0.45)] backdrop-blur-lg">
+            <TabsList className="relative grid h-12 w-full grid-cols-4 items-center rounded-full bg-white/60 p-1 shadow-[0_12px_32px_-20px_rgba(15,23,42,0.45)] backdrop-blur-lg">
               <span
                 aria-hidden="true"
                 className="absolute inset-y-1 left-1 rounded-full bg-white shadow-[0_10px_24px_-18px_rgba(15,23,42,0.45)] transition-transform duration-500"
@@ -81,7 +81,7 @@ export default function App(): React.JSX.Element {
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="relative z-10 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 transition-colors data-[state=active]:bg-transparent data-[state=active]:text-slate-900"
+                  className="relative z-10 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 transition-colors data-[state=active]:bg-transparent data-[state=active]:text-slate-900 data-[state=active]:shadow-none"
                 >
                   {tab.label}
                 </TabsTrigger>
