@@ -25,7 +25,12 @@ export default defineConfig({
         '@shared': resolve('src/shared')
       }
     },
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss({
+        base: resolve('tailwind.config.js')
+      })
+    ],
     server: {
       hmr: {
         overlay: false
