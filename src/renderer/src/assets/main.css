@@ -94,18 +94,30 @@
     @apply text-sm text-slate-500;
   }
   .ha-input {
-    @apply w-full rounded-2xl border border-white/80 bg-white/70 px-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+    @apply w-full rounded-2xl border border-white/80 bg-white/70 px-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
     box-shadow: 0 10px 24px -18px rgba(15, 23, 42, 0.4);
   }
+  .ha-input:focus-visible {
+    --tw-ring-color: hsl(var(--ring));
+    --tw-ring-offset-color: white;
+  }
   .ha-button {
-    @apply inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
     background-color: hsl(var(--primary));
     color: hsl(var(--primary-foreground));
     box-shadow: 0 18px 32px -18px rgba(14, 116, 144, 0.6);
   }
+  .ha-button:focus-visible {
+    --tw-ring-color: hsl(var(--ring));
+    --tw-ring-offset-color: white;
+  }
   .ha-button-secondary {
-    @apply inline-flex items-center justify-center rounded-full border border-white/80 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-full border border-white/80 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
     box-shadow: 0 14px 28px -20px rgba(15, 23, 42, 0.4);
+  }
+  .ha-button-secondary:focus-visible {
+    --tw-ring-color: hsl(var(--ring));
+    --tw-ring-offset-color: white;
   }
   .ha-divider {
     @apply h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent;
